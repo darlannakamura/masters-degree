@@ -24,4 +24,4 @@ def normalize(numpy_array: np.ndarray, interval=(0, 255), data_type: str = 'floa
     if data_type == 'float':
         return out
     else:
-        return out.astype('uint16')
+        return out.astype('uint8')

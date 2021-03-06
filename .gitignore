@@ -1,0 +1,13 @@
+databases/*
+venv
+__pycache__
+
+*.txt
+
+.metadata
+
+*.pyc
+
+__pycache__
+
+.vscode
