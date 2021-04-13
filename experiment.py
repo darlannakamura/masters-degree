@@ -8,6 +8,8 @@ import json
 from typing import Tuple
 
 from datetime import datetime
+from time import strftime
+from time import gmtime
 from tqdm import tqdm
 
 import numpy as np
@@ -33,13 +35,14 @@ from denoising.metrics import psnr, ssim
 from denoising.utils import normalize
 
 from report import Report
+from utils import is_using_gpu
 
 from settings import BSD300_DIR, BASE_DIR
 
 logging.basicConfig(level=logging.WARNING)
 
 CONFIG = {
-    "name": "Gaussian With More Samples",
+    "name": "Gaussian With More Samples4",
     "output": "results",
     "dataset": "BSD300",
     "about": "This experiment is about compare traditional and neural-network based methods in relation to PSNR and SSIM metrics, on Gaussian noise, with mean 0 and std = 0.1."
@@ -53,7 +56,7 @@ METHODS = {
         "parameters": {
             "compile": {
                 "optimizer": "adam",
-                "learning_rate": 0.001,
+                "learning_rate": 0.0001,
                 "loss": "mse"
             },
             "fit": {
@@ -167,7 +170,7 @@ class TraditionalMethodsExperiment:
         patches = extract_patches(imgs, begin=(0,0), stride=10,
             dimension=(52,52), quantity_per_image=(5,5))
     
-        y_train, y_test = load_dataset(patches, shuffle=True, split=(80,20))
+        y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
         self.mean = 0.0
         self.variance = 0.01
@@ -191,6 +194,7 @@ class TraditionalMethodsExperiment:
         return (x_train, y_train, x_test, y_test)
 
     def run(self):
+        self.start_date = datetime.now()
         self.train_methods()
 
         self.test_methods()
@@ -227,9 +231,7 @@ class TraditionalMethodsExperiment:
 
             instance.save_loss_plot(os.path.join(self.output_path, f'{network["id"]}_loss.png'))
 
-    def test_methods(self):
-        self.start_date = datetime.now()
-        
+    def test_methods(self):        
         start_experiment_time = time.time()
 
         for method in tqdm(self.methods):
@@ -297,7 +299,8 @@ class TraditionalMethodsExperiment:
             'about': self.about,
             'start_date': self.start_date.strftime('%Y/%m/%d %H:%M:%S'),
             'end_date': self.end_date.strftime('%Y/%m/%d %H:%M:%S'),
-            'duration': round(self.duration, 2)
+            'duration': strftime("%H hours %M minutes and %S seconds", gmtime(round(self.duration, 2))),
+            'is_using_gpu': 'using GPU' if is_using_gpu() else 'without GPU',
         }
 
         report = Report(variables, template='report_template.md')
@@ -335,6 +338,9 @@ class TraditionalMethodsExperiment:
         fig.savefig(os.path.join(self.output_path, "results.png"), dpi=fig.dpi)
 
     def save_quantitative_results(self, output_type:str='markdown'):
+        def order_by_ssim(e):
+            return round(e['ssim'].mean(), 2)
+
         assert output_type == 'markdown', 'output_type should be: markdown.'
 
         lines = [
@@ -344,7 +350,7 @@ class TraditionalMethodsExperiment:
             "|---|---|---|---|"
         ]
 
-        for _, method in METHODS.items():
+        for method in sorted(list(METHODS.values()), reverse=True, key=order_by_ssim):
             mean_psnr = round(method['psnr'].mean(), 2)
             std_psnr = round(method['psnr'].std(), 2)
 

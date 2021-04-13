@@ -2,7 +2,8 @@
 
 $ABOUT
 
-Experiment started at $START_DATE and ended at $END_DATE, during $DURATION seconds.
+Experiment started at $START_DATE and ended at $END_DATE, during $DURATION.
+Experiment was runned $IS_USING_GPU.
 
 | Methods | Dataset | Training samples | Test samples | Dimension |
 |---|---|---|---|---|

@@ -69,6 +69,7 @@ class NeuralNetwork:
         plt.plot(self.history.history['val_loss'])
         plt.legend(['loss', 'val. loss'])
         plt.savefig(filename)
+        plt.close()
 
     def load(self, filename):
         self.model.load_weights(filename)
