@@ -45,6 +45,9 @@ class TestDeepImagePrior(unittest.TestCase):
         self.assertTrue(compare_ssim(img_np, out_np_avg) > 0.50)
         
 class TestDeepImagePriorWrapper(unittest.TestCase):
+    def setUp(self):
+        self.data = self.load_data()
+
     def load_data(self):
         imgs = load_bsd300(BSD300_DIR)
         patches = extract_patches(imgs, begin=(0,0), stride=10,
@@ -65,12 +68,22 @@ class TestDeepImagePriorWrapper(unittest.TestCase):
         return (x_test, y_test)
 
     def test_deep_image_prior_wrapper(self):
-        (x_test, y_test) = self.load_data()
+        (x_test, y_test) = self.data
 
         pred = deep_image_prior(x_test[:2], iterations=10)
 
         self.assertTrue(psnr(normalize(y_test[:2], data_type='int'), normalize(pred, data_type='int')).mean() > 10)
-        
+    
+    @unittest.skip("Slow test. Usually takes more than 2 minutes to run.")
+    def test_improvement_on_deep_image_prior_wrapper(self):
+        (x_test, y_test) = self.data
+
+        pred = deep_image_prior(x_test[:2], iterations=10)
+        self.assertTrue(psnr(normalize(y_test[:2], data_type='int'), normalize(pred, data_type='int')).mean() > 10)
+
+        pred = deep_image_prior(x_test[:2], iterations=1000)
+        self.assertTrue(psnr(normalize(y_test[:2], data_type='int'), normalize(pred, data_type='int')).mean() > 20)
+
 
 if __name__ == '__main__':
     unittest.main()
