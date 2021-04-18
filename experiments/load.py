@@ -10,11 +10,14 @@ class Method:
         self.instance = instance
         self.need_train = need_train
 
+        self.__dict__.update(kwargs)
+
         self.images = None
         self.psnr = None
         self.ssim = None
         self.runtime = None
 
+    @property
     def is_traditional(self):
         return (self.need_train == False)
 
@@ -27,7 +30,7 @@ def load_config(filename: str) -> dict:
 
         return config
 
-def load_methods() -> dict:
+def load_methods() -> List[Method]:
     """Read all methods from methods.py with the @method decorator.
     Convert the dict response in a Method object 
     and return the methods list. 
@@ -36,20 +39,16 @@ def load_methods() -> dict:
         list[Method]: return the methods list to be used in the experiment.
     """
     functions = method.methods(Methods)
-    new_methods = {}
+    new_methods = []
 
     for k, func in functions.items():
         dict_method = func()
 
-        assert isinstance(dict_method, dict), f"return of {k} should be a dict."
-        assert 'name' in dict_method, f"name attribute is required in {k} return."
-        assert 'instance' in dict_method, f"instance attribute is required in {k} return."
+        assert isinstance(dict_method, dict), f"return of {k}() should be a dict."
+        assert 'name' in dict_method, f"name attribute is required in {k}() return."
+        assert 'instance' in dict_method, f"instance attribute is required in {k}() return."
 
-        dict_method['images'] = None
-        dict_method['psnr'] = None
-        dict_method['ssim'] = None
-        dict_method['runtime'] = None
-
-        new_methods[k] = dict_method
+        new_method = Method(**dict_method)
+        new_methods.append(new_method)
     
     return new_methods
