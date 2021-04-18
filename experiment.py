@@ -39,111 +39,12 @@ from utils import is_using_gpu
 
 from settings import BSD300_DIR, BASE_DIR
 
+from experiments import load_config, load_methods
+
 logging.basicConfig(level=logging.WARNING)
 
-CONFIG = {
-    "name": "Gaussian With More Samples4",
-    "output": "results",
-    "dataset": "BSD300",
-    "about": "This experiment is about compare traditional and neural-network based methods in relation to PSNR and SSIM metrics, on Gaussian noise, with mean 0 and std = 0.1."
-}
-
-METHODS = {
-    "dncnn": {
-        "instance": DnCNN(number_of_layers=19),
-        "name": "DnCNN",
-        "need_train": True,
-        "parameters": {
-            "compile": {
-                "optimizer": "adam",
-                "learning_rate": 0.0001,
-                "loss": "mse"
-            },
-            "fit": {
-                "epochs": 40,
-                "batch_size": 128,
-                "shuffle": True,
-                "extract_validation_dataset": True
-            },
-            "set_checkpoint": {
-                "filename": "default",
-                "save_best_only": True,
-                "save_weights_only": False
-            }
-        },
-        "images": None,
-        "psnr": None,
-        "sssim": None,
-        "runtime": None
-    },
-    "denoising_autoencoder": {
-        "instance": DenoisingAutoencoder(image_dimension=(52,52)),
-        "name": "Autoencoder",
-        "need_train": True,
-        "parameters": {
-            "compile": {
-                "optimizer": "adam",
-                "learning_rate": 1e-3,
-                "loss": "mse"
-            },
-            "fit": {
-                "epochs": 40,
-                "batch_size": 128,
-                "shuffle": True,
-                "extract_validation_dataset": True
-            },
-            "set_checkpoint": {
-                "filename": "default",
-                "save_best_only": True,
-                "save_weights_only": False
-            }
-        },
-        "images": None,
-        "psnr": None,
-        "sssim": None,
-        "runtime": None
-    },
-    "ksvd": {
-        "instance": KSVD,
-        "name": "K-SVD",
-        "images": None,
-        "psnr": None,
-        "ssim": None,
-        "runtime": None
-    },
-    "bm3d": {
-        "instance": BM3D,
-        "name": "BM3D",
-        "images": None,
-        "psnr": None,
-        "ssim": None,
-        "runtime": None
-    },
-    "nlm": {
-        "instance": NLM,
-        "name": "NLM",
-        "images": None,
-        "psnr": None,
-        "ssim": None,
-        "runtime": None
-    },
-    "wst": {
-        "instance": wavelet_soft_thresholding,
-        "name": "WST",
-        "images": None,
-        "psnr": None,
-        "ssim": None,
-        "runtime": None
-    },
-    "pwf": {
-        "instance": wiener_filter,
-        "name": "Wiener Filter",
-        "images": None,
-        "psnr": None,
-        "ssim": None,
-        "runtime": None
-    },
-}
+CONFIG = load_config('experiment_1.yaml')
+METHODS = load_methods()
 
 class TraditionalMethodsExperiment:
     def __init__(self):
