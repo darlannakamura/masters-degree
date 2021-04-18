@@ -1,5 +1,6 @@
-import os, unittest, math
+import os, unittest, math, time
 import numpy as np
+import pandas as pd
 from skimage.measure import compare_psnr, compare_ssim
 from skimage.util import random_noise
 
@@ -83,6 +84,31 @@ class TestDeepImagePriorWrapper(unittest.TestCase):
 
         pred = deep_image_prior(x_test[:2], iterations=1000)
         self.assertTrue(psnr(normalize(y_test[:2], data_type='int'), normalize(pred, data_type='int')).mean() > 20)
+    
+    @unittest.skip("Too much slow test. Used to find the best balance between iterations and PSNR/SSIM.")
+    def test_to_find_the_best_iterations(self):
+        (x_test, y_test) = self.data
+
+        data = []
+
+        for it in [50, 100, 200, 500]:
+            start_time = time.time()
+            pred = deep_image_prior(x_test[:100], iterations=it)
+
+            psnr_avg = psnr(normalize(y_test[:100], data_type='int'), normalize(pred, data_type='int')).mean()
+            ssim_avg = ssim(normalize(y_test[:100], data_type='int'), normalize(pred, data_type='int')).mean()
+
+            data.append({
+                'iterations': it,
+                'time': time.time() - start_time,
+                'psnr': psnr_avg,
+                'ssim': ssim_avg
+            })
+
+            print(f'Iterations {it}: time (seconds): {time.time() - start_time }, psnr: {psnr_avg}, ssim: {ssim_avg}')
+
+        df = pd.DataFrame(data)
+        df.to_csv('deep_image_prior2.csv')
 
 
 if __name__ == '__main__':
