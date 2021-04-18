@@ -14,7 +14,8 @@ dtype = torch.cuda.FloatTensor
 
 class DeepImagePrior:
     def run(self, iterations: int, image_noisy: np.ndarray):
-        # assert len(image_noisy.shape) == 2, "image_noisy should have 2 dimensions."
+        assert len(image_noisy.shape) == 3, "image_noisy should have 3 dimensions."
+        assert image_noisy.shape[0] == 1, f"first shape should be equal to 1, but received {image_noisy.shape[0]}"
 
         INPUT = 'noise' # 'meshgrid'
         pad = 'reflection'
@@ -41,19 +42,14 @@ class DeepImagePrior:
                         upsample_mode='bilinear').type(dtype)
 
         net_input = get_noise(input_depth, INPUT, (img_noisy_pil.size[1], img_noisy_pil.size[0])).type(dtype).detach()
-        print(net_input.shape)
-        print(img_noisy_np.shape)
 
         # Compute number of parameters
         s  = sum([np.prod(list(p.size())) for p in net.parameters()]); 
-        print ('Number of params: %d' % s)
 
         # Loss
         mse = torch.nn.MSELoss().type(dtype)
 
         img_noisy_torch = np_to_torch(img_noisy_np).type(dtype)
-
-        print(img_noisy_torch.shape)
 
         net_input_saved = net_input.detach().clone()
         noise = net_input.detach().clone()
