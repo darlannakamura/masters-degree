@@ -8,6 +8,7 @@ from denoising.methods.traditional.ksvd import KSVD
 
 from denoising.methods.neural_network.dncnn import DnCNN
 from denoising.methods.neural_network.denoising_autoencoder import DenoisingAutoencoder
+from denoising.methods.neural_network.deep_image_prior import deep_image_prior
 
 class Methods:
     @method
@@ -43,6 +44,13 @@ class Methods:
         return {
             'instance': KSVD,
             'name': 'K-SVD'
+        }
+
+    @method
+    def dip():
+        return {
+            'instance': deep_image_prior,
+            'name': 'DIP'
         }
 
     @method
