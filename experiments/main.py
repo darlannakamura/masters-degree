@@ -34,13 +34,12 @@ from experiments import load_config, load_methods, Method
 
 logging.basicConfig(level=logging.WARNING)
 
-CONFIG = load_config('experiment_1.yaml')
-METHODS = load_methods()
-
 class Experiment:
-    def __init__(self):
-        self.load_configuration()
-        self.methods_name = [method.name for method in METHODS]
+    def __init__(self, filename:str):
+        self.load_configuration(filename)
+
+        self.methods = load_methods()
+        self.methods_name = [method.name for method in self.methods]
         
         (self.x_train, self.y_train, self.x_test, self.y_test) = self.load_data()
 
@@ -60,11 +59,9 @@ class Experiment:
         self.save_metadata()
         self.generate_report()
 
-    def load_configuration(self):
-        self.name = CONFIG["name"]
-        self.output = CONFIG["output"]
-        self.dataset = CONFIG["dataset"]
-        self.about = CONFIG["about"]
+    def load_configuration(self, filename: str):
+        config = load_config(filename)
+        self.__dict__.update(config)
 
     def load_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         imgs = load_bsd300(BSD300_DIR)
@@ -97,7 +94,7 @@ class Experiment:
     def train_methods(self):
         nn_methods = []
 
-        for method in METHODS:
+        for method in self.methods:
             if method.need_train:
                 nn_methods.append(method)
 
@@ -124,7 +121,7 @@ class Experiment:
     def test_methods(self):        
         start_experiment_time = time.time()
 
-        for method in tqdm(METHODS):
+        for method in tqdm(self.methods):
             start_time = time.time()
             instance = method.instance
             
@@ -164,7 +161,7 @@ class Experiment:
         np.save(file=os.path.join(self.metadata_path, "y_test.npy"), arr=self.y_test, allow_pickle=True)
 
         # with open(os.path.join(self.metadata_path, "methods.pickle"), 'wb') as handle:
-        #     pickle.dump(METHODS, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        #     pickle.dump(self.methods, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         self.df.to_pickle(os.path.join(self.metadata_path, "df.pickle"))
 
@@ -196,10 +193,10 @@ class Experiment:
     def save_visual_results(self):
         COLUMNS = 5
 
-        # methods = METHODS
+        # methods = self.methods
         methods = []
 
-        for method in METHODS:
+        for method in self.methods:
             methods.append({'name': method.name, 'images': method.images})
         
         methods.insert(0, {'name': "noisy", 'images': self.x_test})
@@ -234,7 +231,7 @@ class Experiment:
             "|---|---|---|---|"
         ]
 
-        for method in sorted(METHODS, reverse=True, key=order_by_ssim):
+        for method in sorted(self.methods, reverse=True, key=order_by_ssim):
             mean_psnr = round(method.psnr.mean(), 2)
             std_psnr = round(method.psnr.std(), 2)
 
@@ -267,7 +264,7 @@ class Experiment:
     def generate_dataframe(self):
         data = []
 
-        for method in METHODS:
+        for method in self.methods:
 
             for p in method.psnr:
                 data.append({
