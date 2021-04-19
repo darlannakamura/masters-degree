@@ -17,6 +17,15 @@ from tensorflow.keras import backend as K
 
 from denoising.methods.neural_network import NeuralNetwork
 
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+
+#this config solves the error: Failed to get convolution algorithm. This is probably because cuDNN failed to initialize
+#solution from: https://github.com/tensorflow/tensorflow/issues/24828
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
+
 class DenoisingAutoencoder(NeuralNetwork):
     """Adapted from: 
     https://www.pyimagesearch.com/2020/02/24/denoising-autoencoders-with-keras-tensorflow-and-deep-learning/
