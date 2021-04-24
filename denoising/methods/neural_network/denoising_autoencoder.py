@@ -29,7 +29,6 @@ class DenoisingAutoencoder(NeuralNetwork):
 
         session = Session(config=config)
 
-        # os.environ['CUDA_VISIBLE_DEVICES'] = "2"
         del os.environ['CUDA_VISIBLE_DEVICES']
 
         self.width = image_dimension[0]
