@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 import numpy as np
 
@@ -14,14 +15,23 @@ class DenoisingAutoencoder(NeuralNetwork):
         import tensorflow as tf
         
         from tensorflow.compat.v1 import ConfigProto
-        from tensorflow.compat.v1 import InteractiveSession
+        from tensorflow.compat.v1 import Session
 
         #this config solves the error: Failed to get convolution algorithm. This is probably because cuDNN failed to initialize
         #solution from: https://github.com/tensorflow/tensorflow/issues/24828
-        config = ConfigProto(device_count = {'GPU': 0})
-        session = InteractiveSession(config=config)
-
+        # config = ConfigProto()
+        # config.gpu_options.per_process_gpu_memory_fraction=0.9
+        # config.gpu_options.allow_growth = True
         
+        # trying to run on CPU
+        config = ConfigProto(device_count = {'GPU': 0})
+        os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+
+        session = Session(config=config)
+
+        # os.environ['CUDA_VISIBLE_DEVICES'] = "2"
+        del os.environ['CUDA_VISIBLE_DEVICES']
+
         self.width = image_dimension[0]
         self.height = image_dimension[1]
 
