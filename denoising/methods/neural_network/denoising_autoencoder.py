@@ -1,30 +1,7 @@
-import tensorflow as tf
-from keras.layers import BatchNormalization
-from keras.layers import Conv2D
-from keras.layers import Conv2DTranspose
-from keras.layers import LeakyReLU
-from keras.layers import Activation
-from keras.layers import Flatten
-from keras.layers import Dense
-from keras.layers import Reshape
-from keras.layers import Input
-from keras.models import Model
-
 from typing import Tuple
 import numpy as np
 
-from tensorflow.keras import backend as K
-
 from denoising.methods.neural_network import NeuralNetwork
-
-from tensorflow.compat.v1 import ConfigProto
-from tensorflow.compat.v1 import InteractiveSession
-
-#this config solves the error: Failed to get convolution algorithm. This is probably because cuDNN failed to initialize
-#solution from: https://github.com/tensorflow/tensorflow/issues/24828
-config = ConfigProto()
-config.gpu_options.allow_growth = True
-session = InteractiveSession(config=config)
 
 class DenoisingAutoencoder(NeuralNetwork):
     """Adapted from: 
@@ -33,6 +10,17 @@ class DenoisingAutoencoder(NeuralNetwork):
     def __init__(self, image_dimension: Tuple[int, int] = (50,50), \
         filters: Tuple[int, int] = (32, 64), latent_dimension: int = 16):
         super().__init__()
+
+        import tensorflow as tf
+        
+        from tensorflow.compat.v1 import ConfigProto
+        from tensorflow.compat.v1 import InteractiveSession
+
+        #this config solves the error: Failed to get convolution algorithm. This is probably because cuDNN failed to initialize
+        #solution from: https://github.com/tensorflow/tensorflow/issues/24828
+        config = ConfigProto(device_count = {'GPU': 0})
+        session = InteractiveSession(config=config)
+
         
         self.width = image_dimension[0]
         self.height = image_dimension[1]
@@ -43,6 +31,19 @@ class DenoisingAutoencoder(NeuralNetwork):
         self.build()
 
     def build(self):
+        from keras.layers import BatchNormalization
+        from keras.layers import Conv2D
+        from keras.layers import Conv2DTranspose
+        from keras.layers import LeakyReLU
+        from keras.layers import Activation
+        from keras.layers import Flatten
+        from keras.layers import Dense
+        from keras.layers import Reshape
+        from keras.layers import Input
+        from keras.models import Model
+
+        from tensorflow.keras import backend as K
+
         input_shape = (self.height, self.width, 1)
         channel_dimension = -1
 

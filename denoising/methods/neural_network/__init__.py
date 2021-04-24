@@ -1,7 +1,4 @@
-import tensorflow as tf
 import numpy as np
-import keras
-from keras.models import load_model
 
 import matplotlib.pyplot as plt
 
@@ -10,6 +7,10 @@ class NeuralNetwork:
         self.has_checkpoint = False
 
     def compile(self, optimizer: str, learning_rate: float, loss: str):
+        import tensorflow as tf
+        import keras
+        from keras.models import load_model
+
         AVAILABLE_OPTIMIZERS = ['adam']
         AVAILABLE_LOSS = ['mse']
 
@@ -22,6 +23,7 @@ class NeuralNetwork:
         self.model.compile(optimizer=opt, loss=loss)
 
     def set_checkpoint(self, filename, save_best_only=True, save_weights_only=False):
+        import keras
         self.has_checkpoint = True
 
         self.checkpoint = keras.callbacks.ModelCheckpoint(

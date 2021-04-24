@@ -1,4 +1,4 @@
-name: Gaussian With More Samples4
+name: Gaussian Noise
 output: results
 dataset: BSD300
-about: This experiment is about compare traditional and neural-network based methods in relation to PSNR and SSIM metrics, on Gaussian noise, with mean 0 and std = 0.1.
+about: Comparing traditional and neural-network based methods in relation to PSNR and SSIM metrics, on Gaussian noise, with mean 0 and std = 0.1.

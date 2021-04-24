@@ -1,6 +1,4 @@
-import tensorflow as tf
 import numpy as np
-import keras
 from keras import Sequential, layers, activations
 from keras.models import Model
 
@@ -17,7 +15,7 @@ class DnCNN(NeuralNetwork):
         self.build()
 
     def build(self):
-        model = keras.Sequential()
+        model = Sequential()
         input = layers.Input(shape=(None, None, 1), name='input')
 
         output = layers.Conv2D(filters=64,kernel_size=(3,3), strides=(1,1), 

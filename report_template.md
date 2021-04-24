@@ -32,7 +32,7 @@ $TABLE
 
 ## 1.5 DnCNN loss
 
-![DnCNN loss](dncnn_loss.png)
+![DnCNN loss](DnCNN_loss.png)
 
 ## How to rerun the experiment?
 

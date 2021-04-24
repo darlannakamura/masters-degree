@@ -5,6 +5,8 @@ import pickle
 import logging
 import json
 
+import multiprocessing
+
 from typing import Tuple
 
 from datetime import datetime
@@ -33,6 +35,29 @@ from settings import BSD300_DIR, BASE_DIR
 from experiments import load_config, load_methods, Method
 
 logging.basicConfig(level=logging.WARNING)
+
+def train_model(network, metadata_path, x_train, y_train, output_path):
+    print('process id:', os.getpid())
+    print(f'Training {network.name}')
+    instance = network.instance(**network.parameters.get('__init__', {}))              
+    instance.compile(**network.parameters.get("compile", {}))
+    
+    if "set_checkpoint" in network.parameters:
+        ckpt_params = network.parameters["set_checkpoint"]
+
+        if ckpt_params["filename"] == "default":
+            ckpt_params["filename"] = os.path.join(metadata_path, f'{network.name}.hdf5')
+        
+        instance.set_checkpoint(**ckpt_params)
+
+    instance.fit(
+        x_train,
+        y_train,
+        **network.parameters.get("fit", {})
+    )
+
+    instance.save_loss_plot(os.path.join(output_path, f'{network.name}_loss.png'))
+
 
 class Experiment:
     def __init__(self, filename:str):
@@ -99,24 +124,9 @@ class Experiment:
                 nn_methods.append(method)
 
         for network in nn_methods:
-            instance = network.instance
-            instance.compile(**network.parameters["compile"])
-            
-            if "set_checkpoint" in network.parameters:
-                ckpt_params = network.parameters["set_checkpoint"]
-
-                if ckpt_params["filename"] == "default":
-                    ckpt_params["filename"] = os.path.join(self.metadata_path, f'{network.name}.hdf5')
-                
-                instance.set_checkpoint(**ckpt_params)
-
-            instance.fit(
-                self.x_train,
-                self.y_train,
-                **network.parameters["fit"]
-            )
-
-            instance.save_loss_plot(os.path.join(self.output_path, f'{network.name}_loss.png'))
+            p = multiprocessing.Process(target=train_model, args=(network, self.metadata_path, self.x_train, self.y_train, self.output_path,))
+            p.start()
+            p.join()
 
     def test_methods(self):        
         start_experiment_time = time.time()
@@ -128,6 +138,8 @@ class Experiment:
             if method.is_traditional:
                 predicted = instance(self.x_test, noise_std_dev=self.std)
             else:
+                instance = instance(**method.parameters.get('__init__', {}))
+                instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
                 predicted = instance.test(self.x_test)
 
             method.runtime = time.time() - start_time
