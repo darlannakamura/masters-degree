@@ -4,7 +4,7 @@ from denoising.methods.neural_network.deep_image_prior.main import DeepImagePrio
 from denoising.utils import *
 
 
-def deep_image_prior(noisy_images: np.ndarray, iterations=500) -> np.ndarray:
+def deep_image_prior(noisy_images: np.ndarray, noise_std_dev=1.0, iterations=500) -> np.ndarray:    
     validate_array_input(noisy_images)
 
     filtered_images = []
@@ -21,6 +21,7 @@ def deep_image_prior(noisy_images: np.ndarray, iterations=500) -> np.ndarray:
         img = noisy_images[:, i, :, :]
         predicted_image, predicted_image_avg = dip.run(
             iterations=iterations,
+            noise_std_dev=noise_std_dev,
             image_noisy=img
         )
 

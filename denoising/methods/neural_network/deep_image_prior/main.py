@@ -13,7 +13,7 @@ torch.backends.cudnn.benchmark =True
 dtype = torch.cuda.FloatTensor
 
 class DeepImagePrior:
-    def run(self, iterations: int, image_noisy: np.ndarray):
+    def run(self, iterations: int, noise_std_dev: float, image_noisy: np.ndarray):
         assert len(image_noisy.shape) == 3, "image_noisy should have 3 dimensions."
         assert image_noisy.shape[0] == 1, f"first shape should be equal to 1, but received {image_noisy.shape[0]}"
 
@@ -21,6 +21,7 @@ class DeepImagePrior:
         pad = 'reflection'
         OPT_OVER = 'net' # 'net,input'
 
+        # reg_noise_std = noise_std_dev
         reg_noise_std = 1./30. # set to 1./20. for sigma=50
         LR = 0.01
 

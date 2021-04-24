@@ -48,7 +48,7 @@ class Methods:
             'name': 'K-SVD'
         }
 
-    # @method
+    @method
     def dip():
         return {
             'instance': deep_image_prior,

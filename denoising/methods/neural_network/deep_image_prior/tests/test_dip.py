@@ -33,7 +33,7 @@ class TestDeepImagePrior(unittest.TestCase):
 
         dip = DeepImagePrior()
 
-        out, out_avg = dip.run(iterations=10, image_noisy=img_noisy_np)
+        out, out_avg = dip.run(iterations=10, image_noisy=img_noisy_np, noise_std_dev=1.0)
 
         self.assertTrue(compare_psnr(img_np, out) > 10)
         self.assertTrue(compare_psnr(img_np, out_avg) > 10)
@@ -71,7 +71,7 @@ class TestDeepImagePriorWrapper(unittest.TestCase):
     def test_deep_image_prior_wrapper(self):
         (x_test, y_test) = self.data
 
-        pred = deep_image_prior(x_test[:2], iterations=10)
+        pred = deep_image_prior(x_test[:2], iterations=10, noise_std_dev=1.0)
 
         self.assertTrue(psnr(normalize(y_test[:2], data_type='int'), normalize(pred, data_type='int')).mean() > 10)
     
@@ -79,10 +79,10 @@ class TestDeepImagePriorWrapper(unittest.TestCase):
     def test_improvement_on_deep_image_prior_wrapper(self):
         (x_test, y_test) = self.data
 
-        pred = deep_image_prior(x_test[:2], iterations=10)
+        pred = deep_image_prior(x_test[:2], iterations=10, noise_std_dev=1.0)
         self.assertTrue(psnr(normalize(y_test[:2], data_type='int'), normalize(pred, data_type='int')).mean() > 10)
 
-        pred = deep_image_prior(x_test[:2], iterations=1000)
+        pred = deep_image_prior(x_test[:2], iterations=1000, noise_std_dev=1.0)
         self.assertTrue(psnr(normalize(y_test[:2], data_type='int'), normalize(pred, data_type='int')).mean() > 20)
     
     @unittest.skip("Too much slow test. Used to find the best balance between iterations and PSNR/SSIM.")
@@ -93,7 +93,7 @@ class TestDeepImagePriorWrapper(unittest.TestCase):
 
         for it in [50, 100, 200, 500]:
             start_time = time.time()
-            pred = deep_image_prior(x_test[:100], iterations=it)
+            pred = deep_image_prior(x_test[:100], iterations=it, noise_std_dev=1.0)
 
             psnr_avg = psnr(normalize(y_test[:100], data_type='int'), normalize(pred, data_type='int')).mean()
             ssim_avg = ssim(normalize(y_test[:100], data_type='int'), normalize(pred, data_type='int')).mean()
