@@ -36,7 +36,7 @@ from experiments import load_config, load_methods, Method
 
 logging.basicConfig(level=logging.WARNING)
 
-def train_model(network, metadata_path, x_train, y_train, output_path):
+def train_model(network, metadata_path, x_train, y_train, output_path, test):
     print('process id:', os.getpid())
     print(f'Training {network.name}')
     instance = network.instance(**network.parameters.get('__init__', {}))              
@@ -50,17 +50,23 @@ def train_model(network, metadata_path, x_train, y_train, output_path):
         
         instance.set_checkpoint(**ckpt_params)
 
+    fit_params = network.parameters.get("fit", {})
+
+    if test:
+        fit_params['epochs'] = 1
+
     instance.fit(
         x_train,
         y_train,
-        **network.parameters.get("fit", {})
+        **fit_params
     )
 
     instance.save_loss_plot(os.path.join(output_path, f'{network.name}_loss.png'))
 
 
 class Experiment:
-    def __init__(self, filename:str):
+    def __init__(self, filename:str, test: bool):
+        self.test = test
         self.load_configuration(filename)
 
         self.methods = load_methods()
@@ -114,7 +120,12 @@ class Experiment:
         y_train = y_train.astype('float32') / 255.0
         y_test = y_test.astype('float32') / 255.0
 
-        return (x_train, y_train, x_test, y_test)
+        arrs = (x_train, y_train, x_test, y_test)
+
+        if self.test:
+            arrs = (x_train[:10], y_train[:10], x_test[:10], y_test[:10])
+            
+        return arrs
 
     def train_methods(self):
         nn_methods = []
@@ -124,7 +135,7 @@ class Experiment:
                 nn_methods.append(method)
 
         for network in nn_methods:
-            p = multiprocessing.Process(target=train_model, args=(network, self.metadata_path, self.x_train, self.y_train, self.output_path,))
+            p = multiprocessing.Process(target=train_model, args=(network, self.metadata_path, self.x_train, self.y_train, self.output_path, self.test,))
             p.start()
             p.join()
 
@@ -136,7 +147,10 @@ class Experiment:
             instance = method.instance
             
             if method.is_traditional:
-                predicted = instance(self.x_test, noise_std_dev=self.std)
+                kwargs = {'noise_std_dev': self.std}
+                if self.test and method.name == 'DIP':
+                    kwargs['iterations'] = 1
+                predicted = instance(self.x_test, **kwargs)
             else:
                 instance = instance(**method.parameters.get('__init__', {}))
                 instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
