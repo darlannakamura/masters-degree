@@ -9,27 +9,8 @@ class DenoisingAutoencoder(NeuralNetwork):
     https://www.pyimagesearch.com/2020/02/24/denoising-autoencoders-with-keras-tensorflow-and-deep-learning/
     """
     def __init__(self, image_dimension: Tuple[int, int] = (50,50), \
-        filters: Tuple[int, int] = (32, 64), latent_dimension: int = 16):
-        super().__init__()
-
-        import tensorflow as tf
-        
-        from tensorflow.compat.v1 import ConfigProto
-        from tensorflow.compat.v1 import Session
-
-        #this config solves the error: Failed to get convolution algorithm. This is probably because cuDNN failed to initialize
-        #solution from: https://github.com/tensorflow/tensorflow/issues/24828
-        # config = ConfigProto()
-        # config.gpu_options.per_process_gpu_memory_fraction=0.9
-        # config.gpu_options.allow_growth = True
-        
-        # trying to run on CPU
-        config = ConfigProto(device_count = {'GPU': 0})
-        os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
-
-        session = Session(config=config)
-
-        del os.environ['CUDA_VISIBLE_DEVICES']
+        filters: Tuple[int, int] = (32, 64), latent_dimension: int = 16, run_in_cpu=False):
+        super().__init__(run_in_cpu)
 
         self.width = image_dimension[0]
         self.height = image_dimension[1]

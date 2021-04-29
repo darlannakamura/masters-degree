@@ -28,41 +28,13 @@ from denoising.metrics import psnr, ssim
 from denoising.utils import normalize
 
 from report import Report
-from utils import is_using_gpu
+# from utils import is_using_gpu
 
 from settings import BSD300_DIR, BASE_DIR
 
 from experiments import load_config, load_methods, Method
 
 logging.basicConfig(level=logging.WARNING)
-
-def train_model(network, metadata_path, x_train, y_train, output_path, test):
-    print('process id:', os.getpid())
-    print(f'Training {network.name}')
-    instance = network.instance(**network.parameters.get('__init__', {}))              
-    instance.compile(**network.parameters.get("compile", {}))
-    
-    if "set_checkpoint" in network.parameters:
-        ckpt_params = network.parameters["set_checkpoint"]
-
-        if ckpt_params["filename"] == "default":
-            ckpt_params["filename"] = os.path.join(metadata_path, f'{network.name}.hdf5')
-        
-        instance.set_checkpoint(**ckpt_params)
-
-    fit_params = network.parameters.get("fit", {})
-
-    if test:
-        fit_params['epochs'] = 1
-
-    instance.fit(
-        x_train,
-        y_train,
-        **fit_params
-    )
-
-    instance.save_loss_plot(os.path.join(output_path, f'{network.name}_loss.png'))
-
 
 class Experiment:
     def __init__(self, filename:str, test: bool):
@@ -82,8 +54,6 @@ class Experiment:
 
     def run(self):
         self.start_date = datetime.now()
-        self.train_methods()
-
         self.test_methods()
 
         self.save_results()
@@ -126,18 +96,6 @@ class Experiment:
             arrs = (x_train[:10], y_train[:10], x_test[:10], y_test[:10])
             
         return arrs
-
-    def train_methods(self):
-        nn_methods = []
-
-        for method in self.methods:
-            if method.need_train:
-                nn_methods.append(method)
-
-        for network in nn_methods:
-            p = multiprocessing.Process(target=train_model, args=(network, self.metadata_path, self.x_train, self.y_train, self.output_path, self.test,))
-            p.start()
-            p.join()
 
     def test_methods(self):        
         start_experiment_time = time.time()
@@ -210,7 +168,7 @@ class Experiment:
             'start_date': self.start_date.strftime('%Y/%m/%d %H:%M:%S'),
             'end_date': self.end_date.strftime('%Y/%m/%d %H:%M:%S'),
             'duration': strftime("%H hours %M minutes and %S seconds", gmtime(round(self.duration, 2))),
-            'is_using_gpu': 'using GPU' if is_using_gpu() else 'without GPU',
+            # 'is_using_gpu': 'using GPU' if is_using_gpu() else 'without GPU',
         }
 
         report = Report(variables, template='report_template.md')

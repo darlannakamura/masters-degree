@@ -1,10 +1,21 @@
+import os
 import numpy as np
 
 import matplotlib.pyplot as plt
 
 class NeuralNetwork:
-    def __init__(self):
+    def __init__(self, run_in_cpu=False):
         self.has_checkpoint = False
+
+        if run_in_cpu:
+            from tensorflow.compat.v1 import ConfigProto
+            from tensorflow.compat.v1 import Session
+
+            config = ConfigProto(device_count = {'GPU': 0})
+            os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+
+            session = Session(config=config)
+            del os.environ['CUDA_VISIBLE_DEVICES']
 
     def compile(self, optimizer: str, learning_rate: float, loss: str):
         import tensorflow as tf

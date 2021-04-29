@@ -11,6 +11,7 @@ from denoising.methods.neural_network.denoising_autoencoder import DenoisingAuto
 from denoising.methods.neural_network.deep_image_prior import deep_image_prior
 from denoising.methods.neural_network.mlp import MLP
 from denoising.methods.neural_network.cnn import CNN
+from denoising.methods.neural_network.cgan_denoiser.main import CGanDenoiser 
 
 EPOCHS = 40
 
@@ -99,7 +100,8 @@ class Methods:
             'need_train': True,
             "parameters": {
                 "__init__": {
-                    "image_dimension": (52,52)
+                    "image_dimension": (52,52),
+                    "run_in_cpu": True
                 },
                 "compile": {
                     "optimizer": "adam",
@@ -131,7 +133,8 @@ class Methods:
                     "image_dimension": (52,52),
                     "hidden_layers": 3,
                     "depth": 32,
-                    "multiply": True
+                    "multiply": True,
+                    "run_in_cpu": True
                 },
                 "compile": {
                     "optimizer": "adam",
@@ -164,7 +167,8 @@ class Methods:
                     "hidden_layers": 10,
                     "depth": 32,
                     "multiply": False,
-                    "pooling": None
+                    "pooling": None,
+                    "run_in_cpu": True
                 },
                 "compile": {
                     "optimizer": "adam",
@@ -181,6 +185,31 @@ class Methods:
                     "filename": "default",
                     "save_best_only": True,
                     "save_weights_only": False
+                }
+            },
+        }
+
+    @method
+    def cgan_denoiser():
+        return {
+            'name': 'CGAN',
+            'instance': CGanDenoiser,
+            'need_train': True,
+            "parameters": {
+                "__init__": {
+                    "image_dimensions": (52,52)
+                },
+                "compile": {
+                    "optimizer": "adam",
+                    "learning_rate": 0.0001,
+                    "loss": "mse",
+                },
+                "fit": {
+                    "epochs": EPOCHS,
+                    "batch_size": 256,
+                },
+                "set_checkpoint": {
+                    "directory": "default",
                 }
             },
         }

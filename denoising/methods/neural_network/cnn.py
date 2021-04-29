@@ -6,17 +6,9 @@ import matplotlib.pyplot as plt
 from denoising.methods.neural_network import NeuralNetwork
 
 class CNN(NeuralNetwork):
-    def __init__(self, image_dimension=(50,50), hidden_layers=3, depth=32, multiply=False, kernel_size=(3,3), pooling='maxpooling'):
-        super().__init__()
-        
-        from tensorflow.compat.v1 import ConfigProto
-        from tensorflow.compat.v1 import Session
-
-        config = ConfigProto(device_count = {'GPU': 0})
-        os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
-
-        session = Session(config=config)
-        del os.environ['CUDA_VISIBLE_DEVICES']
+    def __init__(self, image_dimension=(50,50), hidden_layers=3, depth=32, multiply=False, 
+        kernel_size=(3,3), pooling='maxpooling', run_in_cpu=False):
+        super().__init__(run_in_cpu)
         
         self.hidden_layers = hidden_layers
         self.image_dimension = image_dimension
