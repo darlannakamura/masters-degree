@@ -13,11 +13,21 @@ import numpy as np
 
 
 class CGanDenoiser:
-    def __init__(self, image_dimensions=(52,52)):
+    def __init__(self, image_dimensions=(52,52), run_in_cpu=False):
         import denoising.methods.neural_network.cgan_denoiser.cgan as model
         import tensorflow as tf
 
         assert image_dimensions[0] == image_dimensions[1], "Image dimension should be squared."
+
+        if run_in_cpu:
+            from tensorflow.compat.v1 import ConfigProto
+            from tensorflow.compat.v1 import Session
+
+            config = ConfigProto(device_count = {'GPU': 0})
+            os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+
+            session = Session(config=config)
+            del os.environ['CUDA_VISIBLE_DEVICES']
 
         # # Set up the models for training
         self.generator = model.make_generator_model_small(train_size=image_dimensions[0])
@@ -95,7 +105,8 @@ class CGanDenoiser:
         self.checkpoint.restore(filename)
     
     def test(self, x_test: np.ndarray):
-        prediction = self.generator(x_test, training=False)
+        prediction =  self.generator(x_test, training=False)
+        return prediction.numpy()
 
     def train_step(self, inputs: np.ndarray, labels: np.ndarray):
         import tensorflow as tf

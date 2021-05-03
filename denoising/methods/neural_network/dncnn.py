@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 from denoising.methods.neural_network import NeuralNetwork
 
 class DnCNN(NeuralNetwork):
-    def __init__(self, number_of_layers=19):
-        super().__init__()
+    def __init__(self, number_of_layers=19, run_in_cpu=False):
+        super().__init__(run_in_cpu)
         
         self.number_of_layers = number_of_layers
 

@@ -33,6 +33,7 @@ from report import Report
 from settings import BSD300_DIR, BASE_DIR
 
 from experiments import load_config, load_methods, Method
+from denoising.methods.neural_network import NeuralNetwork
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -111,7 +112,13 @@ class Experiment:
                 predicted = instance(self.x_test, **kwargs)
             else:
                 instance = instance(**method.parameters.get('__init__', {}))
-                instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
+                if isinstance(instance, NeuralNetwork):
+                    instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
+                else:
+                    instance.compile(**method.parameters.get('compile', {}))
+                    instance.set_checkpoint(**method.parameters.get('set_checkpoint', {}))
+                    instance.load(**method.parameters.get('load', {}))
+
                 predicted = instance.test(self.x_test)
 
             method.runtime = time.time() - start_time

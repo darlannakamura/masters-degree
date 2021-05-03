@@ -66,6 +66,7 @@ class Methods:
         parameters = {
             "__init__": {
                 'number_of_layers': 19,
+                "run_in_cpu": True
             },
             "compile": {
                 "optimizer": "adam",
@@ -189,7 +190,7 @@ class Methods:
             },
         }
 
-    @method
+    # @method
     def cgan_denoiser():
         return {
             'name': 'CGAN',
@@ -209,7 +210,10 @@ class Methods:
                     "batch_size": 256,
                 },
                 "set_checkpoint": {
-                    "directory": "default",
-                }
+                    "directory": "results/Gaussian Noise/.metadata/cga-ckpt-8",
+                },
+                "load": {
+                    "filename": "results/Gaussian Noise/.metadata/cgan-ckpt-8"
+                },
             },
         }
