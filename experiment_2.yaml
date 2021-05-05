@@ -1,0 +1,4 @@
+name: Gaussian Noise 2
+output: results
+dataset: BSD300
+about: Comparing traditional and neural-network based methods in relation to PSNR and SSIM metrics, on Gaussian noise, with mean 0 and std = 0.1.
