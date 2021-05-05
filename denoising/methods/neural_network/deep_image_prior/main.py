@@ -13,9 +13,11 @@ torch.backends.cudnn.benchmark =True
 dtype = torch.cuda.FloatTensor
 
 class DeepImagePrior:
-    def run(self, iterations: int, noise_std_dev: float, image_noisy: np.ndarray):
+    def run(self, iterations: int, noise_std_dev: float, image_noisy: np.ndarray, debug:bool=False):
         assert len(image_noisy.shape) == 3, "image_noisy should have 3 dimensions."
         assert image_noisy.shape[0] == 1, f"first shape should be equal to 1, but received {image_noisy.shape[0]}"
+
+        self.debug = debug
 
         INPUT = 'noise' # 'meshgrid'
         pad = 'reflection'
@@ -83,12 +85,14 @@ class DeepImagePrior:
             
             # Note that we do not have GT for the "snail" example
             # So 'PSRN_gt', 'PSNR_gt_sm' make no sense
-            print ('Iteration %05d    Loss %f   PSNR_noisy: %f    ' % (self.i, total_loss.item(), psrn_noisy), '\r', end='')
+            if self.debug:
+                print ('Iteration %05d    Loss %f   PSNR_noisy: %f    ' % (self.i, total_loss.item(), psrn_noisy), '\r', end='')
             
             # Backtracking
             if self.i % show_every:
                 if psrn_noisy - self.psrn_noisy_last < -5: 
-                    print('Falling back to previous checkpoint.')
+                    if self.debug:
+                        print('Falling back to previous checkpoint.')
 
                     for new_param, net_param in zip(self.last_net, net.parameters()):
                         net_param.data.copy_(new_param.cuda())
