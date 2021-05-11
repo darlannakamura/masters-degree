@@ -72,18 +72,31 @@ class Experiment:
     
         y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
-        self.mean = 0.0
-        self.variance = 0.01
-        self.std = math.sqrt(self.variance) # 0.1
+        if isinstance(self.noise, str):
+            if self.noise == 'poisson':
+                self.std = 0.1
+                x_train = add_noise(y_train, noise='poisson')
+                x_test = add_noise(y_test, noise='poisson')
+        if isinstance(self.noise, dict):
+            assert 'type' in self.noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
+            noise_type = self.noise['type']
+            if noise_type == 'gaussian':
+                assert 'mean' in self.noise, "noise should have 'mean' attribute."
+                assert 'variance' in self.noise, "noise should have 'variance' attribute."
 
-        x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
-        x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
+                self.mean = float(self.noise['mean'])
+                self.variance = float(self.noise['variance'])
+                self.std = math.sqrt(self.variance) # 0.1
 
-        # x_train = normalize(x_train, interval=(0,1), data_type='float')
-        # x_test = normalize(x_test, interval=(0,1), data_type='float')
-        
-        # y_train = normalize(y_train, interval=(0,1), data_type='float')
-        # y_test = normalize(y_test, interval=(0,1), data_type='float')
+                x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
+                x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
+
+        if hasattr(self, 'normalize') and self.normalize:
+            x_train = normalize(x_train, interval=(0,1), data_type='float')
+            x_test = normalize(x_test, interval=(0,1), data_type='float')
+            
+            y_train = normalize(y_train, interval=(0,1), data_type='float')
+            y_test = normalize(y_test, interval=(0,1), data_type='float')
 
         x_train = x_train.astype('float32') / 255.0
         x_test = x_test.astype('float32') / 255.0
