@@ -1,0 +1,5 @@
+name: Poisson Noise 2
+output: results
+dataset: BSD300
+about: Comparing traditional and neural-network bas ed methods in relation to PSNR and SSIM metrics, on Poisson noise.
+noise: poisson
