@@ -80,13 +80,20 @@ class Experiment:
         if isinstance(self.noise, dict):
             assert 'type' in self.noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
             noise_type = self.noise['type']
-            if noise_type == 'gaussian':
-                assert 'mean' in self.noise, "noise should have 'mean' attribute."
-                assert 'variance' in self.noise, "noise should have 'variance' attribute."
 
-                self.mean = float(self.noise['mean'])
-                self.variance = float(self.noise['variance'])
-                self.std = math.sqrt(self.variance) # 0.1
+            assert 'mean' in self.noise, "noise should have 'mean' attribute."
+            assert 'variance' in self.noise, "noise should have 'variance' attribute."
+
+            self.mean = float(self.noise['mean'])
+            self.variance = float(self.noise['variance'])
+            self.std = math.sqrt(self.variance) # 0.1
+
+            if noise_type == 'gaussian':
+                x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
+                x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
+            elif noise_type == 'poisson-gaussian':
+                x_train = add_noise(y_train, noise='poisson')
+                x_test = add_noise(y_test, noise='poisson')
 
                 x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
                 x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)

@@ -14,7 +14,7 @@ def append_in_csv(filename: str, row: str):
     with open(filename, 'a') as f:
         f.write(row+'\n')
 
-def load_data(check: bool) -> Tuple[np.ndarray]:
+def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
     from settings import BASE_DIR, BSD300_DIR
 
     from denoising.datasets import load_bsd300
@@ -28,12 +28,30 @@ def load_data(check: bool) -> Tuple[np.ndarray]:
     
     y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
-    mean = 0.0
-    variance = 0.01
-    std = math.sqrt(variance) # 0.1
+    noise = config['noise']
 
-    x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
-    x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
+    if isinstance(noise, str):
+        if noise == 'poisson':
+            x_train = add_noise(y_train, noise='poisson')
+            x_test = add_noise(y_test, noise='poisson')
+    if isinstance(noise, dict):
+        assert 'type' in noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
+        noise_type = noise['type']
+        assert 'mean' in noise, "noise should have 'mean' attribute."
+        assert 'variance' in noise, "noise should have 'variance' attribute."
+
+        mean = float(noise['mean'])
+        variance = float(noise['variance'])
+
+        if noise_type == 'gaussian':
+            x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
+            x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
+        elif noise_type == 'poisson-gaussian':
+            x_train = add_noise(y_train, noise='poisson')
+            x_test = add_noise(y_test, noise='poisson')
+
+            x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
+            x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
 
     x_train = x_train.astype('float32') / 255.0
     y_train = y_train.astype('float32') / 255.0
@@ -69,7 +87,7 @@ def train_mlp(file: str, check: bool, config: Dict[str, str]):
     start_time = time.time()
     from denoising.methods.neural_network.mlp import MLP
 
-    (x_train, y_train, _, _) = load_data(check)
+    (x_train, y_train, _, _) = load_data(check, config)
 
     mlp = MLP(image_dimension=(52,52), hidden_layers=3, depth=32, multiply=True)
     mlp.compile(optimizer="adam", learning_rate=0.0001, loss="mse")
@@ -91,7 +109,7 @@ def train_cnn(file: str, check: bool, config: Dict[str, str]):
     start_time = time.time()
     from denoising.methods.neural_network.cnn import CNN
 
-    (x_train, y_train, _, _) = load_data(check)
+    (x_train, y_train, _, _) = load_data(check, config)
 
     cnn = CNN(image_dimension=(52,52), hidden_layers=10, depth=32, multiply=False, pooling=None)
     cnn.compile(optimizer="adam", learning_rate=0.0001, loss='mse')
@@ -110,7 +128,7 @@ def train_autoencoder(file: str, check: bool, config: Dict[str, str]):
     start_time = time.time()
     from denoising.methods.neural_network.denoising_autoencoder import DenoisingAutoencoder
 
-    (x_train, y_train, _, _) = load_data(check)
+    (x_train, y_train, _, _) = load_data(check, config)
 
     ae = DenoisingAutoencoder(image_dimension=(52,52))
     ae.compile(optimizer='adam', learning_rate=1e-3, loss='mse')
@@ -129,7 +147,7 @@ def train_cgan(file: str, check: bool, config: Dict[str, str]):
     start_time = time.time()
     from denoising.methods.neural_network.cgan_denoiser.main import CGanDenoiser
 
-    (x_train, y_train, _, _) = load_data(check)
+    (x_train, y_train, _, _) = load_data(check, config)
     
     gan = CGanDenoiser(image_dimensions=(52,52))
     gan.compile(optimizer='adam', learning_rate=0.0001, loss='mse')
@@ -145,7 +163,7 @@ def train_dncnn(file: str, check: bool, config: Dict[str, str]):
     start_time = time.time()
     from denoising.methods.neural_network.dncnn import DnCNN
 
-    (x_train, y_train, _, _) = load_data(check)
+    (x_train, y_train, _, _) = load_data(check, config)
 
     dncnn = DnCNN(number_of_layers=19)
     dncnn.compile(optimizer="adam", learning_rate=0.0001, loss='mse')
@@ -154,7 +172,7 @@ def train_dncnn(file: str, check: bool, config: Dict[str, str]):
     dncnn.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
     dncnn.fit(epochs=get_epochs(check), x_train=x_train, y_train=y_train, batch_size=128, shuffle=True, extract_validation_dataset=True)
 
-    time_in_seconds = time.time()
+    time_in_seconds = time.time() - start_time
     dncnn.save_loss_plot(os.path.join(config['output_path'], f'DnCNN_loss.png'))
 
     append_in_csv(config['time_file'], f'dncnn, {time_in_seconds}')
