@@ -82,13 +82,13 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
         
         y_train = normalize(y_train, interval=(0,1), data_type='float')
         y_test = normalize(y_test, interval=(0,1), data_type='float')
+    
+    if 'divide_by_255' in config and config['divide_by_255']:
+        x_train = x_train.astype('float32') / 255.0
+        y_train = y_train.astype('float32') / 255.0
 
-
-    x_train = x_train.astype('float32') / 255.0
-    y_train = y_train.astype('float32') / 255.0
-
-    x_test = x_test.astype('float32') / 255.0
-    y_test = y_test.astype('float32') / 255.0
+        x_test = x_test.astype('float32') / 255.0
+        y_test = y_test.astype('float32') / 255.0
 
     if check:
         return (x_train[:10], y_train[:10], x_test[:10], y_test[:10])
