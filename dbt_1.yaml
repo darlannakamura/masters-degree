@@ -1,0 +1,5 @@
+name: DBT Alvarado 1
+output: results
+dataset: dbt
+about: Comparing traditional and neural-network bas ed methods in relation to PSNR and SSIM metrics, on DBT projections.
+normalize: True
