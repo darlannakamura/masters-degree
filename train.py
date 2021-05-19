@@ -63,7 +63,7 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
         noisy_projections = noisy_projections.reshape((-1, 1792, 2048, 1))
         
         noisy_patches = extract_patches(noisy_projections, begin=(0,500), stride=10,
-            dimension=(52,52), quantity_per_image=(10,5))
+            dimension=(52,52), quantity_per_image=(10,10))
 
         x_train, x_test = load_dataset(noisy_patches, shuffle=False, split=(80,20))
 
@@ -71,7 +71,7 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
         original_projections = original_projections.reshape((-1, 1792, 2048, 1))
         
         original_patches = extract_patches(original_projections, begin=(0,500), stride=10,
-            dimension=(52,52), quantity_per_image=(10,5))
+            dimension=(52,52), quantity_per_image=(10,10))
 
         y_train, y_test = load_dataset(original_patches, shuffle=False, split=(80,20))
 
