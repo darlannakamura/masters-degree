@@ -15,43 +15,74 @@ def append_in_csv(filename: str, row: str):
         f.write(row+'\n')
 
 def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
-    from settings import BASE_DIR, BSD300_DIR
+    from settings import BASE_DIR, BSD300_DIR, PROJECTIONS_DIR
 
     from denoising.datasets import load_bsd300
     from denoising.datasets import load_dataset
     from denoising.datasets import extract_patches
     from denoising.datasets import add_noise
 
-    imgs = load_bsd300(BSD300_DIR)
-    patches = extract_patches(imgs, begin=(0,0), stride=10,
-        dimension=(52,52), quantity_per_image=(5,5))
-    
-    y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
+    from denoising.utils import normalize
 
-    noise = config['noise']
+    dataset = config['dataset']
 
-    if isinstance(noise, str):
-        if noise == 'poisson':
-            x_train = add_noise(y_train, noise='poisson')
-            x_test = add_noise(y_test, noise='poisson')
-    if isinstance(noise, dict):
-        assert 'type' in noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
-        noise_type = noise['type']
-        assert 'mean' in noise, "noise should have 'mean' attribute."
-        assert 'variance' in noise, "noise should have 'variance' attribute."
+    if dataset.lower() == 'bsd300':
+        imgs = load_bsd300(BSD300_DIR)
+        patches = extract_patches(imgs, begin=(0,0), stride=10,
+            dimension=(52,52), quantity_per_image=(5,5))
+        
+        y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
-        mean = float(noise['mean'])
-        variance = float(noise['variance'])
+        noise = config['noise']
 
-        if noise_type == 'gaussian':
-            x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
-            x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
-        elif noise_type == 'poisson-gaussian':
-            x_train = add_noise(y_train, noise='poisson')
-            x_test = add_noise(y_test, noise='poisson')
+        if isinstance(noise, str):
+            if noise == 'poisson':
+                x_train = add_noise(y_train, noise='poisson')
+                x_test = add_noise(y_test, noise='poisson')
+        if isinstance(noise, dict):
+            assert 'type' in noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
+            noise_type = noise['type']
+            assert 'mean' in noise, "noise should have 'mean' attribute."
+            assert 'variance' in noise, "noise should have 'variance' attribute."
 
-            x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
-            x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
+            mean = float(noise['mean'])
+            variance = float(noise['variance'])
+
+            if noise_type == 'gaussian':
+                x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
+                x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
+            elif noise_type == 'poisson-gaussian':
+                x_train = add_noise(y_train, noise='poisson')
+                x_test = add_noise(y_test, noise='poisson')
+
+                x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
+                x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
+
+    elif dataset.lower() == 'dbt':
+        noisy_projections = np.load(os.path.join(PROJECTIONS_DIR, 'noisy_10.npy'))
+        noisy_projections = noisy_projections.reshape((-1, 1792, 2048, 1))
+        
+        noisy_patches = extract_patches(noisy_projections, begin=(0,500), stride=10,
+            dimension=(52,52), quantity_per_image=(10,5))
+
+        x_train, x_test = load_dataset(noisy_patches, shuffle=False, split=(80,20))
+
+        original_projections = np.load(os.path.join(PROJECTIONS_DIR, 'original_10.npy'))
+        original_projections = original_projections.reshape((-1, 1792, 2048, 1))
+        
+        original_patches = extract_patches(original_projections, begin=(0,500), stride=10,
+            dimension=(52,52), quantity_per_image=(10,5))
+
+        y_train, y_test = load_dataset(original_patches, shuffle=False, split=(80,20))
+
+
+    if 'normalize' in config and config['normalize']:
+        x_train = normalize(x_train, interval=(0,1), data_type='float')
+        x_test = normalize(x_test, interval=(0,1), data_type='float')
+        
+        y_train = normalize(y_train, interval=(0,1), data_type='float')
+        y_test = normalize(y_test, interval=(0,1), data_type='float')
+
 
     x_train = x_train.astype('float32') / 255.0
     y_train = y_train.astype('float32') / 255.0

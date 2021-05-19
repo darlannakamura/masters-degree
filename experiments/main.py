@@ -30,7 +30,7 @@ from denoising.utils import normalize
 from report import Report
 # from utils import is_using_gpu
 
-from settings import BSD300_DIR, BASE_DIR
+from settings import BSD300_DIR, BASE_DIR, PROJECTIONS_DIR
 
 from experiments import load_config, load_methods, Method
 from denoising.methods.neural_network import NeuralNetwork
@@ -66,37 +66,56 @@ class Experiment:
         self.__dict__.update(config)
 
     def load_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        imgs = load_bsd300(BSD300_DIR)
-        patches = extract_patches(imgs, begin=(0,0), stride=10,
-            dimension=(52,52), quantity_per_image=(5,5))
-    
-        y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
+        if self.dataset.lower() == 'bsd300':
+            imgs = load_bsd300(BSD300_DIR)
+            patches = extract_patches(imgs, begin=(0,0), stride=10,
+                dimension=(52,52), quantity_per_image=(5,5))
+        
+            y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
-        if isinstance(self.noise, str):
-            if self.noise == 'poisson':
-                self.std = 0.1
-                x_train = add_noise(y_train, noise='poisson')
-                x_test = add_noise(y_test, noise='poisson')
-        if isinstance(self.noise, dict):
-            assert 'type' in self.noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
-            noise_type = self.noise['type']
+            if isinstance(self.noise, str):
+                if self.noise == 'poisson':
+                    self.std = 0.1
+                    x_train = add_noise(y_train, noise='poisson')
+                    x_test = add_noise(y_test, noise='poisson')
+            if isinstance(self.noise, dict):
+                assert 'type' in self.noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
+                noise_type = self.noise['type']
 
-            assert 'mean' in self.noise, "noise should have 'mean' attribute."
-            assert 'variance' in self.noise, "noise should have 'variance' attribute."
+                assert 'mean' in self.noise, "noise should have 'mean' attribute."
+                assert 'variance' in self.noise, "noise should have 'variance' attribute."
 
-            self.mean = float(self.noise['mean'])
-            self.variance = float(self.noise['variance'])
-            self.std = math.sqrt(self.variance) # 0.1
+                self.mean = float(self.noise['mean'])
+                self.variance = float(self.noise['variance'])
+                self.std = math.sqrt(self.variance) # 0.1
 
-            if noise_type == 'gaussian':
-                x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
-                x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
-            elif noise_type == 'poisson-gaussian':
-                x_train = add_noise(y_train, noise='poisson')
-                x_test = add_noise(y_test, noise='poisson')
+                if noise_type == 'gaussian':
+                    x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
+                    x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
+                elif noise_type == 'poisson-gaussian':
+                    x_train = add_noise(y_train, noise='poisson')
+                    x_test = add_noise(y_test, noise='poisson')
 
-                x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
-                x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
+                    x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
+                    x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
+
+        elif self.dataset.lower() == 'dbt':
+            noisy_projections = np.load(os.path.join(PROJECTIONS_DIR, 'noisy_10.npy'))
+            noisy_projections = noisy_projections.reshape((-1, 1792, 2048, 1))
+            
+            noisy_patches = extract_patches(noisy_projections, begin=(0,500), stride=10,
+                dimension=(52,52), quantity_per_image=(10,5))
+
+            x_train, x_test = load_dataset(noisy_patches, shuffle=False, split=(80,20))
+
+            original_projections = np.load(os.path.join(PROJECTIONS_DIR, 'original_10.npy'))
+            original_projections = original_projections.reshape((-1, 1792, 2048, 1))
+            
+            original_patches = extract_patches(original_projections, begin=(0,500), stride=10,
+                dimension=(52,52), quantity_per_image=(10,5))
+
+            y_train, y_test = load_dataset(original_patches, shuffle=False, split=(80,20))
+
 
         if hasattr(self, 'normalize') and self.normalize:
             x_train = normalize(x_train, interval=(0,1), data_type='float')
@@ -126,6 +145,9 @@ class Experiment:
             instance = method.instance
             
             if method.is_traditional:
+                if self.dataset.lower() == 'dbt':
+                    noise = self.y_test - self.x_test
+                    self.std = float(noise.std())
                 kwargs = {'noise_std_dev': self.std}
                 if self.test and method.name == 'DIP':
                     kwargs['iterations'] = 1
