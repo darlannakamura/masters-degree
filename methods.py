@@ -190,7 +190,7 @@ class Methods:
             },
         }
 
-    # @method
+    @method
     def cgan_denoiser():
         return {
             'name': 'CGAN',
@@ -198,7 +198,8 @@ class Methods:
             'need_train': True,
             "parameters": {
                 "__init__": {
-                    "image_dimensions": (52,52)
+                    "image_dimensions": (52,52),
+                    "run_in_cpu": True,
                 },
                 "compile": {
                     "optimizer": "adam",
@@ -210,10 +211,10 @@ class Methods:
                     "batch_size": 256,
                 },
                 "set_checkpoint": {
-                    "directory": "results/Gaussian Noise/.metadata/cga-ckpt-8",
+                    "directory": "results/DBT Alvarado 1/.metadata/cga-ckpt-8",
                 },
                 "load": {
-                    "filename": "results/Gaussian Noise/.metadata/cgan-ckpt-8"
+                    "filename": "results/DBT Alvarado 1/.metadata/cgan-ckpt-8"
                 },
             },
         }
