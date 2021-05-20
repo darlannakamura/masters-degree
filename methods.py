@@ -44,14 +44,14 @@ class Methods:
             'name': 'BM3D'
         }
 
-    @method
+    # @method
     def ksvd():
         return {
             'instance': KSVD,
             'name': 'K-SVD'
         }
 
-    @method
+    # @method
     def dip():
         return {
             'instance': deep_image_prior,
@@ -92,8 +92,43 @@ class Methods:
             'need_train': need_train,
             'parameters': parameters
         }
-    
+
     @method
+    def dncnn10():
+        name = "DnCNN10"
+        instance = DnCNN
+        need_train = True
+        parameters = {
+            "__init__": {
+                'number_of_layers': 10,
+                "run_in_cpu": True
+            },
+            "compile": {
+                "optimizer": "adam",
+                "learning_rate": 0.001,
+                "loss": "mse"
+            },
+            "fit": {
+                "epochs": EPOCHS,
+                "batch_size": 128,
+                "shuffle": True,
+                "extract_validation_dataset": True
+            },
+            "set_checkpoint": {
+                "filename": "default",
+                "save_best_only": True,
+                "save_weights_only": False
+            }
+        }
+
+        return {
+            'name': name,
+            'instance': instance,
+            'need_train': need_train,
+            'parameters': parameters
+        }
+    
+    # @method
     def denoising_autoencoder():
         return {
             'name': 'Autoencoder',
@@ -131,7 +166,7 @@ class Methods:
             'need_train': True,
             "parameters": {
                 "__init__": {
-                    "image_dimension": (52,52),
+                    "image_dimension": (50,50),
                     "hidden_layers": 3,
                     "depth": 32,
                     "multiply": True,
@@ -139,7 +174,7 @@ class Methods:
                 },
                 "compile": {
                     "optimizer": "adam",
-                    "learning_rate": 0.0001,
+                    "learning_rate": 0.001,
                     "loss": "mse"
                 },
                 "fit": {
@@ -164,7 +199,7 @@ class Methods:
             'need_train': True,
             "parameters": {
                 "__init__": {
-                    "image_dimension": (52,52),
+                    "image_dimension": (50,50),
                     "hidden_layers": 10,
                     "depth": 32,
                     "multiply": False,
@@ -173,7 +208,7 @@ class Methods:
                 },
                 "compile": {
                     "optimizer": "adam",
-                    "learning_rate": 0.0001,
+                    "learning_rate": 0.001,
                     "loss": "mse"
                 },
                 "fit": {
@@ -198,7 +233,7 @@ class Methods:
             'need_train': True,
             "parameters": {
                 "__init__": {
-                    "image_dimensions": (52,52),
+                    "image_dimensions": (50,50),
                     "run_in_cpu": True,
                 },
                 "compile": {
@@ -211,10 +246,10 @@ class Methods:
                     "batch_size": 256,
                 },
                 "set_checkpoint": {
-                    "directory": "results/DBT Alvarado 1/.metadata/cga-ckpt-8",
+                    "directory": "results/SPIE 2021 1/.metadata/cga-ckpt-8",
                 },
                 "load": {
-                    "filename": "results/DBT Alvarado 1/.metadata/cgan-ckpt-8"
+                    "filename": "results/SPIE 2021 1/.metadata/cgan-ckpt-8"
                 },
             },
         }

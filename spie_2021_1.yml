@@ -1,0 +1,4 @@
+name: SPIE 2021 1
+output: results
+dataset: spie_2021
+about: Comparing traditional and neural-network bas ed methods in relation to PSNR and SSIM metrics, on SPIE 2021 dataset.

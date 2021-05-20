@@ -4,6 +4,7 @@ import time
 import pickle
 import logging
 import json
+import cv2
 
 import multiprocessing
 
@@ -116,6 +117,54 @@ class Experiment:
 
             y_train, y_test = load_dataset(original_patches, shuffle=False, split=(80,20))
 
+        elif self.dataset.lower() == 'spie_2021':
+            from denoising.datasets.spie_2021 import carrega_dataset, adiciona_a_dimensao_das_cores
+
+            full_x_train, full_y_train, full_x_test, full_y_test = carrega_dataset(
+              '/content/gdrive/My Drive/Colab Notebooks/dataset/patch-50x50-cada-projecao-200', 
+              divisao=(80,20), embaralhar=True)
+
+            x_train =  np.reshape(full_x_train, (-1, 50, 50))
+            x_test = np.reshape(full_x_test, (-1, 50, 50))
+            y_train = np.reshape(full_y_train, (-1, 50, 50))
+            y_test = np.reshape(full_y_test, (-1, 50, 50)) 
+
+            del full_x_train
+            del full_y_train
+            del full_x_test
+            del full_y_test
+
+
+            x_train = x_train[:15000]
+            y_train = y_train[:15000]
+
+            x_test = x_test[:3750]
+            y_test = y_test[:3750]
+
+
+            np.random.seed(13)
+            np.random.shuffle(x_train)
+
+            np.random.seed(13)
+            np.random.shuffle(y_train)
+
+
+            np.random.seed(43)
+            np.random.shuffle(x_test)
+
+
+            np.random.seed(43)
+            np.random.shuffle(y_test)
+
+            x_train = cv2.normalize(x_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+            y_train = cv2.normalize(y_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+            x_test = cv2.normalize(x_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+            y_test = cv2.normalize(y_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+
+            x_train = adiciona_a_dimensao_das_cores(x_train)
+            y_train = adiciona_a_dimensao_das_cores(y_train)
+            x_test = adiciona_a_dimensao_das_cores(x_test)
+            y_test = adiciona_a_dimensao_das_cores(y_test)
 
         if hasattr(self, 'normalize') and self.normalize:
             x_train = normalize(x_train, interval=(0,1), data_type='float')
@@ -146,7 +195,7 @@ class Experiment:
             instance = method.instance
             
             if method.is_traditional:
-                if self.dataset.lower() == 'dbt':
+                if self.dataset.lower() in ('dbt', 'spie_2021'):
                     noise = self.y_test - self.x_test
                     self.std = float(noise.std())
                 kwargs = {'noise_std_dev': self.std}

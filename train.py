@@ -15,6 +15,8 @@ def append_in_csv(filename: str, row: str):
         f.write(row+'\n')
 
 def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
+    from copy import deepcopy
+    import cv2
     from settings import BASE_DIR, BSD300_DIR, PROJECTIONS_DIR
 
     from denoising.datasets import load_bsd300
@@ -23,6 +25,7 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
     from denoising.datasets import add_noise
 
     from denoising.utils import normalize
+
 
     dataset = config['dataset']
 
@@ -74,8 +77,56 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
             dimension=(52,52), quantity_per_image=(10,10))
 
         y_train, y_test = load_dataset(original_patches, shuffle=False, split=(80,20))
+    elif dataset.lower() == 'spie_2021':
+        from denoising.datasets.spie_2021 import carrega_dataset, adiciona_a_dimensao_das_cores
+
+        full_x_train, full_y_train, full_x_test, full_y_test = carrega_dataset(
+          '/content/gdrive/My Drive/Colab Notebooks/dataset/patch-50x50-cada-projecao-200', 
+          divisao=(80,20), embaralhar=True)
+
+        x_train =  np.reshape(full_x_train, (-1, 50, 50))
+        x_test = np.reshape(full_x_test, (-1, 50, 50))
+        y_train = np.reshape(full_y_train, (-1, 50, 50))
+        y_test = np.reshape(full_y_test, (-1, 50, 50)) 
+
+        del full_x_train
+        del full_y_train
+        del full_x_test
+        del full_y_test
 
 
+        x_train = x_train[:15000]
+        y_train = y_train[:15000]
+
+        x_test = x_test[:3750]
+        y_test = y_test[:3750]
+
+
+        np.random.seed(13)
+        np.random.shuffle(x_train)
+
+        np.random.seed(13)
+        np.random.shuffle(y_train)
+
+
+        np.random.seed(43)
+        np.random.shuffle(x_test)
+
+
+        np.random.seed(43)
+        np.random.shuffle(y_test)
+
+        x_train = cv2.normalize(x_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+        y_train = cv2.normalize(y_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+        x_test = cv2.normalize(x_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+        y_test = cv2.normalize(y_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+
+        x_train = adiciona_a_dimensao_das_cores(x_train)
+        y_train = adiciona_a_dimensao_das_cores(y_train)
+        x_test = adiciona_a_dimensao_das_cores(x_test)
+        y_test = adiciona_a_dimensao_das_cores(y_test)
+
+  
     if 'normalize' in config and config['normalize']:
         x_train = normalize(x_train, interval=(0,1), data_type='float')
         x_test = normalize(x_test, interval=(0,1), data_type='float')
@@ -120,8 +171,8 @@ def train_mlp(file: str, check: bool, config: Dict[str, str]):
 
     (x_train, y_train, _, _) = load_data(check, config)
 
-    mlp = MLP(image_dimension=(52,52), hidden_layers=3, depth=32, multiply=True)
-    mlp.compile(optimizer="adam", learning_rate=0.0001, loss="mse")
+    mlp = MLP(image_dimension=(50,50), hidden_layers=3, depth=32, multiply=True)
+    mlp.compile(optimizer="adam", learning_rate=0.001, loss="mse")
 
     ckpt = os.path.join(config['metadata_path'], f'MLP.hdf5')
     mlp.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
@@ -142,8 +193,8 @@ def train_cnn(file: str, check: bool, config: Dict[str, str]):
 
     (x_train, y_train, _, _) = load_data(check, config)
 
-    cnn = CNN(image_dimension=(52,52), hidden_layers=10, depth=32, multiply=False, pooling=None)
-    cnn.compile(optimizer="adam", learning_rate=0.0001, loss='mse')
+    cnn = CNN(image_dimension=(50,50), hidden_layers=10, depth=32, multiply=False, pooling=None)
+    cnn.compile(optimizer="adam", learning_rate=0.001, loss='mse')
     
     ckpt = os.path.join(config['metadata_path'], f'CNN.hdf5')
     cnn.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
@@ -180,8 +231,8 @@ def train_cgan(file: str, check: bool, config: Dict[str, str]):
 
     (x_train, y_train, _, _) = load_data(check, config)
     
-    gan = CGanDenoiser(image_dimensions=(52,52))
-    gan.compile(optimizer='adam', learning_rate=0.0001, loss='mse')
+    gan = CGanDenoiser(image_dimensions=(50,50))
+    gan.compile(optimizer='adam', learning_rate=0.001, loss='mse')
     gan.set_checkpoint(directory=os.path.join(config['metadata_path'], 'cgan-ckpt'))
 
     gan.fit(epochs=get_epochs(check), x_train=x_train, y_train=y_train, batch_size=256)
@@ -208,13 +259,33 @@ def train_dncnn(file: str, check: bool, config: Dict[str, str]):
 
     append_in_csv(config['time_file'], f'dncnn, {time_in_seconds}')
 
+
+def train_dncnn_10(file: str, check: bool, config: Dict[str, str]):
+    start_time = time.time()
+    from denoising.methods.neural_network.dncnn import DnCNN
+
+    (x_train, y_train, _, _) = load_data(check, config)
+
+    dncnn = DnCNN(number_of_layers=10)
+    dncnn.compile(optimizer="adam", learning_rate=0.001, loss='mse')
+
+    ckpt = os.path.join(config['metadata_path'], f'DnCNN10.hdf5')
+    dncnn.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
+    dncnn.fit(epochs=get_epochs(check), x_train=x_train, y_train=y_train, batch_size=128, shuffle=True, extract_validation_dataset=True)
+
+    time_in_seconds = time.time() - start_time
+    dncnn.save_loss_plot(os.path.join(config['output_path'], f'DnCNN10_loss.png'))
+
+    append_in_csv(config['time_file'], f'dncnn10, {time_in_seconds}')
+
 def train(filename: str, check: bool):
     config = load_config(filename)
 
     config['time_file'] = os.path.join(config['metadata_path'], 'time.csv')
     append_in_csv(config['time_file'], 'name, seconds') 
 
-    for func in [train_mlp, train_cnn, train_autoencoder, train_cgan, train_dncnn]:
+    # removido o autoencoder
+    for func in [train_mlp, train_cnn, train_cgan, train_dncnn, train_dncnn_10]:
         p = Process(target=func, args=(filename, check, config, ))
         p.start()
         p.join()

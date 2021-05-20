@@ -2,12 +2,12 @@
 
 Comparing traditional and neural-network bas ed methods in relation to PSNR and SSIM metrics, on DBT projections.
 
-Experiment started at 2021/05/18 21:53:01 and ended at 2021/05/18 21:55:38, during 00 hours 02 minutes and 36 seconds.
+Experiment started at 2021/05/19 20:23:32 and ended at 2021/05/19 20:39:25, during 00 hours 15 minutes and 52 seconds.
 
 
 | Methods | Dataset | Training samples | Test samples | Dimension |
 |---|---|---|---|---|
-| CGAN,CNN,Autoencoder,DnCNN,MLP,NLM,Wiener Filter and WST | dbt | 6600 | 1650 | 52 X 52 |
+| BM3D,CGAN,CNN,Autoencoder,DnCNN,MLP,NLM,Wiener Filter and WST | dbt | 13200 | 3300 | 52 X 52 |
 
 # 1. Results
 
@@ -19,18 +19,16 @@ We could see the results through the table, comparing all the methods in relatio
 
 | Method | PSNR (dB) | SSIM | Runtime (seconds) |
 |---|---|---|---|
-| BM3D | 28.02 ± 2.65 | 0.73 ± 0.03 | 139.21 |
-| Wiener Filter | 20.83 ± 4.34 | 0.7 ± 0.02 | 1.11 |
-| DIP | 21.35 ± 4.98 | 0.66 ± 0.05 | 9670.17 |
-| K-SVD | 22.28 ± 4.0 | 0.66 ± 0.03 | 5645.98 |
-| WST | 24.53 ± 2.64 | 0.63 ± 0.02 | 1.6 |
-| NLM | 25.36 ± 2.91 | 0.58 ± 0.07 | 54.49 |
-| DnCNN | 14.21 ± 4.85 | 0.47 ± 0.09 | 49.23 |
-| CGAN | 10.25 ± 5.89 | 0.31 ± 0.05 | 18.44 |
-| CNN | 13.19 ± 2.59 | 0.06 ± 0.01 | 21.9 |
-| Autoencoder | 5.02 ± 1.16 | 0.0 ± 0.0 | 1.94 |
-| MLP | 4.78 ± 3.57 | 0.0 ± 0.0 | 2.21 |
-| Noisy | 19.38 ± 3.23 | 0.34 ± 0.03 | --- |
+| BM3D | 27.92 ± 2.5 | 0.74 ± 0.03 | 524.88 |
+| CGAN | 29.31 ± 1.39 | 0.72 ± 0.03 | 41.74 |
+| Wiener Filter | 20.7 ± 4.19 | 0.7 ± 0.03 | 2.21 |
+| WST | 28.89 ± 1.29 | 0.67 ± 0.02 | 3.07 |
+| Autoencoder | 25.1 ± 0.76 | 0.61 ± 0.07 | 8.25 |
+| DnCNN | 23.06 ± 2.55 | 0.61 ± 0.08 | 202.09 |
+| NLM | 25.62 ± 2.7 | 0.6 ± 0.06 | 112.01 |
+| CNN | 23.18 ± 3.36 | 0.56 ± 0.09 | 39.72 |
+| MLP | 20.19 ± 2.26 | 0.32 ± 0.04 | 6.3 |
+| Noisy | 18.53 ± 3.62 | 0.35 ± 0.04 | --- |
 
 ## 1.2 PSNR Boxplot
 
