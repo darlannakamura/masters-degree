@@ -21,13 +21,13 @@ def train_dncnn(layers: int, samples: int, config: Dict[str, str]):
     dncnn = DnCNN(number_of_layers=layers)
     dncnn.compile(optimizer="adam", learning_rate=0.0001, loss='mse')
 
-    ckpt = os.path.join(config['metadata_path'], f'DnCNN.hdf5')
+    ckpt = os.path.join(config['metadata_path'], f'DnCNN{layers}_{samples}.hdf5')
     dncnn.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
 
     dncnn.fit(epochs=get_epochs(True), x_train=x_train, y_train=y_train, batch_size=128, shuffle=True, extract_validation_dataset=True)
 
     time_in_seconds = time.time() - start_time
-    dncnn.save_loss_plot(os.path.join(config['output_path'], f'DnCNN{layers}_loss.png'))
+    dncnn.save_loss_plot(os.path.join(config['output_path'], f'DnCNN{layers}_{samples}_loss.png'))
 
     dncnn.load(ckpt)
     predicted = dncnn.test(x_test)
