@@ -1,7 +1,6 @@
-name: Compare DnCNN - SPIE 2021
+name: BSD300 Poisson-Gaussian
 output: compare_methods_parameters
 dataset: BSD300
-noise:
-  type: gaussian
+  type: poisson-gaussian
   mean: 0.0
   variance: 0.01

@@ -1,0 +1,4 @@
+name: BSD300 Poisson
+output: compare_methods_parameters
+dataset: BSD300
+noise: poisson

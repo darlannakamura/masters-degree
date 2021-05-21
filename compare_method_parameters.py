@@ -45,6 +45,42 @@ def train_dncnn(layers: int, samples: int, config: Dict[str, str]):
     append_in_csv(config['comparison_file'], f'{layers}, {samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
 
 
+def train_mlp(layers: int, samples: int, config: Dict[str, str]):
+    start_time = time.time()
+    from denoising.methods.neural_network.mlp import MLP
+
+    (x_train, y_train, x_test, y_test) = load_data(check=False, config=config)
+    
+    x_train = x_train[:samples]
+    y_train = y_train[:samples]
+
+    mlp = MLP(image_dimension=(50,50), hidden_layers=layers, depth=32, multiply=False)
+    mlp.compile(optimizer="adam", learning_rate=0.0001, loss='mse')
+
+    ckpt = os.path.join(config['metadata_path'], f'MLP{layers}_{samples}.hdf5')
+    mlp.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
+
+    mlp.fit(epochs=get_epochs(True), x_train=x_train, y_train=y_train, batch_size=128, shuffle=True, extract_validation_dataset=True)
+
+    time_in_seconds = time.time() - start_time
+    mlp.save_loss_plot(os.path.join(config['output_path'], f'MLP{layers}_{samples}_loss.png'))
+
+    mlp.load(ckpt)
+    predicted = mlp.test(x_test)
+
+    psnr_data = round(psnr(
+        normalize(y_test, data_type='int'), 
+        normalize(predicted, data_type='int')
+    ).mean(), 2)
+    
+    ssim_data = round(ssim(
+        normalize(y_test, data_type='int'), 
+        normalize(predicted, data_type='int')
+    ).mean(), 2)
+
+    append_in_csv(config['comparison_file'], f'{layers}, {samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
+
+
 def compare(filename: str, method: str, check: bool):
     config = load_config(filename)
 
@@ -56,6 +92,17 @@ def compare(filename: str, method: str, check: bool):
 
         for layer in [10, 15, 19]:
             for samples in [5,10, 15]:
+                samples *= 1000
+
+                p = Process(target=method_func, args=(layer, samples, config, ))
+                p.start()
+                p.join()
+
+    elif method.lower() == 'mlp':
+        method_func = train_mlp
+
+        for layer in [3, 5,10,15,20, 25]:
+            for samples in [5, 10, 15]:
                 samples *= 1000
 
                 p = Process(target=method_func, args=(layer, samples, config, ))

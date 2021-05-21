@@ -1,0 +1,7 @@
+name: BSD300 Gaussian
+output: compare_methods_parameters
+dataset: BSD300
+noise:
+  type: gaussian
+  mean: 0.0
+  variance: 0.01
