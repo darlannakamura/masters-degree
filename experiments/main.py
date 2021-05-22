@@ -70,7 +70,11 @@ class Experiment:
         if self.dataset.lower() == 'bsd300':
             imgs = load_bsd300(BSD300_DIR)
             patches = extract_patches(imgs, begin=(0,0), stride=10,
-                dimension=(52,52), quantity_per_image=(5,5))
+                dimension=(50,50), quantity_per_image=(10,10))
+
+            if hasattr(self, 'shuffle') and self.shuffle:
+                np.random.seed(10)
+                np.random.shuffle(patches)
         
             y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
