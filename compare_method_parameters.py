@@ -152,6 +152,41 @@ def train_autoencoder(samples: int, config: Dict[str, str]):
 
     append_in_csv(config['comparison_file'], f'{layers}, {samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
 
+def train_cgan(samples: int, config: Dict[str, str]):
+    start_time = time.time()
+    from denoising.methods.neural_network.cgan_denoiser.main import CGanDenoiser
+
+    (x_train, y_train, x_test, y_test) = load_data(check=False, config=config)
+    
+    x_train = x_train[:samples]
+    y_train = y_train[:samples]
+
+    cnn = CGanDenoiser(image_dimension=(50,50))
+    cnn.compile(optimizer="adam", learning_rate=0.001, loss='mse')
+
+    ckpt = os.path.join(config['metadata_path'], f'CGAN_{samples}.hdf5')
+    cnn.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
+
+    cnn.fit(epochs=get_epochs(False), x_train=x_train, y_train=y_train, batch_size=128, shuffle=True, extract_validation_dataset=True)
+
+    time_in_seconds = round(time.time() - start_time, 2)
+    cnn.save_loss_plot(os.path.join(config['output_path'], f'CGAN_{samples}_loss.png'))
+
+    cnn.load(ckpt)
+    predicted = cnn.test(x_test)
+
+    psnr_data = round(psnr(
+        normalize(y_test, data_type='int'), 
+        normalize(predicted, data_type='int')
+    ).mean(), 2)
+    
+    ssim_data = round(ssim(
+        normalize(y_test, data_type='int'), 
+        normalize(predicted, data_type='int')
+    ).mean(), 2)
+
+    append_in_csv(config['comparison_file'], f'{layers}, {samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
+
 
 def compare(filename: str, method: str, check: bool):
     config = load_config(filename)
@@ -193,6 +228,16 @@ def compare(filename: str, method: str, check: bool):
                 p.join()
 
     elif method.lower() == 'autoencoder':
+        method_func = train_autoencoder
+
+        for samples in [5,10,15]:
+            samples *= 1000
+
+            p = Process(target=method_func, args=(samples, config, ))
+            p.start()
+            p.join()
+
+    elif method.lower() == 'cgan':
         method_func = train_autoencoder
 
         for samples in [5,10,15]:
