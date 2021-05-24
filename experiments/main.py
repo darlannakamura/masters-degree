@@ -75,7 +75,7 @@ class Experiment:
             if hasattr(self, 'shuffle') and self.shuffle:
                 np.random.seed(10)
                 np.random.shuffle(patches)
-        
+
             y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
             if isinstance(self.noise, str):
@@ -176,6 +176,19 @@ class Experiment:
             
             y_train = normalize(y_train, interval=(0,1), data_type='float')
             y_test = normalize(y_test, interval=(0,1), data_type='float')
+
+        if hasattr(self, 'shuffle') and self.shuffle:
+            np.random.seed(13)
+            np.random.shuffle(x_train)
+
+            np.random.seed(13)
+            np.random.shuffle(y_train)
+
+            np.random.seed(43)
+            np.random.shuffle(x_test)
+
+            np.random.seed(43)
+            np.random.shuffle(y_test)
 
         if hasattr(self, 'divide_by_255') and self.divide_by_255:
             x_train = x_train.astype('float32') / 255.0

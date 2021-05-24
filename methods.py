@@ -44,14 +44,14 @@ class Methods:
             'name': 'BM3D'
         }
 
-    # @method
+    @method
     def ksvd():
         return {
             'instance': KSVD,
             'name': 'K-SVD'
         }
 
-    # @method
+    @method
     def dip():
         return {
             'instance': deep_image_prior,

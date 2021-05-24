@@ -32,8 +32,12 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
     if dataset.lower() == 'bsd300':
         imgs = load_bsd300(BSD300_DIR)
         patches = extract_patches(imgs, begin=(0,0), stride=10,
-            dimension=(52,52), quantity_per_image=(5,5))
+            dimension=(50,50), quantity_per_image=(10,10))
         
+        if 'shuffle' in config and config['shuffle']:
+            np.random.seed(10)
+            np.random.shuffle(patches)
+
         y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
 
         noise = config['noise']
@@ -60,7 +64,6 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
 
                 x_train = add_noise(y_train, noise='gaussian', mean=mean, var=variance)
                 x_test = add_noise(y_test, noise='gaussian', mean=mean, var=variance)
-
     elif dataset.lower() == 'dbt':
         noisy_projections = np.load(os.path.join(PROJECTIONS_DIR, 'noisy_10.npy'))
         noisy_projections = noisy_projections.reshape((-1, 1792, 2048, 1))
@@ -128,12 +131,26 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
 
   
     if 'normalize' in config and config['normalize']:
-        x_train = normalize(x_train, interval=(0,1), data_type='float')
-        x_test = normalize(x_test, interval=(0,1), data_type='float')
-        
-        y_train = normalize(y_train, interval=(0,1), data_type='float')
-        y_test = normalize(y_test, interval=(0,1), data_type='float')
-    
+        x_train = cv2.normalize(x_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+        y_train = cv2.normalize(y_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+        x_test = cv2.normalize(x_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+        y_test = cv2.normalize(y_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
+
+    if 'shuffle' in config and config['shuffle']:
+        np.random.seed(13)
+        np.random.shuffle(x_train)
+
+        np.random.seed(13)
+        np.random.shuffle(y_train)
+
+
+        np.random.seed(43)
+        np.random.shuffle(x_test)
+
+
+        np.random.seed(43)
+        np.random.shuffle(y_test)
+
     if 'divide_by_255' in config and config['divide_by_255']:
         x_train = x_train.astype('float32') / 255.0
         y_train = y_train.astype('float32') / 255.0
