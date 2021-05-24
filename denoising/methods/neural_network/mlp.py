@@ -33,7 +33,7 @@ class MLP(NeuralNetwork):
 
             output = layers.Dense(self.depth, activation="relu", name=f"dense{layer}")(output)
 
-        output = layers.Dense(1, activation="relu", name="dense10")(output)
+        output = layers.Dense(1, activation="relu", name="last_dense")(output)
         output = layers.Flatten()(output)
         output = layers.Reshape(self.input_shape, name='output')(output)
 
