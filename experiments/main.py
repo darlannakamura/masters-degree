@@ -170,39 +170,28 @@ class Experiment:
             x_test = adiciona_a_dimensao_das_cores(x_test)
             y_test = adiciona_a_dimensao_das_cores(y_test)
 
-        if hasattr(self, 'normalize') and self.normalize:
-            x_train = normalize(x_train, interval=(0,1), data_type='float')
-            x_test = normalize(x_test, interval=(0,1), data_type='float')
-            
-            y_train = normalize(y_train, interval=(0,1), data_type='float')
-            y_test = normalize(y_test, interval=(0,1), data_type='float')
-
-        if hasattr(self, 'shuffle') and self.shuffle:
-            np.random.seed(13)
-            np.random.shuffle(x_train)
-
-            np.random.seed(13)
-            np.random.shuffle(y_train)
-
-            np.random.seed(43)
-            np.random.shuffle(x_test)
-
-            np.random.seed(43)
-            np.random.shuffle(y_test)
-
-        if hasattr(self, 'divide_by_255') and self.divide_by_255:
-            x_train = x_train.astype('float32') / 255.0
-            x_test = x_test.astype('float32') / 255.0
-
-            y_train = y_train.astype('float32') / 255.0
-            y_test = y_test.astype('float32') / 255.0
-
         arrs = (x_train, y_train, x_test, y_test)
 
         if self.test:
             arrs = (x_train[:10], y_train[:10], x_test[:10], y_test[:10])
             
         return arrs
+
+    def get_normalized_dataset(self) -> Tuple[np.ndarray]:
+        return (
+            cv2.normalize(self.x_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F),
+            cv2.normalize(self.y_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F),
+            cv2.normalize(self.x_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F),
+            cv2.normalize(self.y_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F),
+        )
+
+    def get_divided_by_255_dataset(self) -> Tuple[np.ndarray]:
+        return (
+            (self.x_train.astype('float32') / 255.0),
+            (self.y_train.astype('float32') / 255.0),
+            (self.x_test.astype('float32') / 255.0),
+            (self.y_test.astype('float32') / 255.0)
+        )
 
     def test_methods(self):        
         start_experiment_time = time.time()
@@ -212,15 +201,21 @@ class Experiment:
             instance = method.instance
             
             if method.is_traditional:
+                (_, _, x_test, y_test) = self.get_divided_by_255_dataset()
                 if self.dataset.lower() in ('dbt', 'spie_2021'):
                     noise = self.y_test - self.x_test
                     self.std = float(noise.std())
                 kwargs = {'noise_std_dev': self.std}
                 if self.test and method.name == 'DIP':
                     kwargs['iterations'] = 1
-                predicted = instance(self.x_test, **kwargs)
+                
+                
+                predicted = instance(x_test, **kwargs)
             else:
+                (_, _, x_test, y_test) = self.get_normalized_dataset()
+
                 instance = instance(**method.parameters.get('__init__', {}))
+
                 if isinstance(instance, NeuralNetwork):
                     instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
                 else:
@@ -228,16 +223,16 @@ class Experiment:
                     instance.set_checkpoint(**method.parameters.get('set_checkpoint', {}))
                     instance.load(**method.parameters.get('load', {}))
 
-                predicted = instance.test(self.x_test)
+                predicted = instance.test(x_test)
 
             method.runtime = time.time() - start_time
             method.images = predicted
             method.psnr = psnr(
-                normalize(self.y_test, data_type='int'), 
+                normalize(y_test, data_type='int'), 
                 normalize(predicted, data_type='int')
             )
             method.ssim = ssim(
-                normalize(self.y_test, data_type='int'), 
+                normalize(y_test, data_type='int'), 
                 normalize(predicted, data_type='int')
             )
         
