@@ -1,0 +1,4 @@
+name: DBT Alvarado 25x25
+output: results
+dataset: 25x25
+about: Comparing traditional and neural-network bas ed methods in relation to PSNR and SSIM metrics, on DBT projections.
