@@ -90,7 +90,7 @@ def train_cnn(layers: int, samples: int, config: Dict[str, str]):
     x_train = x_train[:samples]
     y_train = y_train[:samples]
 
-    cnn = CNN(image_dimension=(50,50), hidden_layers=layers, depth=32, multiply=False, pooling=None, run_in_cpu=True)
+    cnn = CNN(image_dimension=(50,50), hidden_layers=layers, depth=32, multiply=False, pooling=None)
     cnn.compile(optimizer="adam", learning_rate=0.001, loss='mse')
 
     ckpt = os.path.join(config['metadata_path'], f'CNN{layers}_{samples}.hdf5')
@@ -150,7 +150,7 @@ def train_autoencoder(samples: int, config: Dict[str, str]):
         normalize(predicted, data_type='int')
     ).mean(), 2)
 
-    append_in_csv(config['comparison_file'], f'{layers}, {samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
+    append_in_csv(config['comparison_file'], f'{samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
 
 def train_cgan(samples: int, config: Dict[str, str]):
     start_time = time.time()
@@ -161,18 +161,18 @@ def train_cgan(samples: int, config: Dict[str, str]):
     x_train = x_train[:samples]
     y_train = y_train[:samples]
 
-    cnn = CGanDenoiser(image_dimension=(50,50))
+    cnn = CGanDenoiser(image_dimensions=(50,50))
     cnn.compile(optimizer="adam", learning_rate=0.001, loss='mse')
 
     ckpt = os.path.join(config['metadata_path'], f'CGAN_{samples}.hdf5')
-    cnn.set_checkpoint(filename=ckpt, save_best_only=True, save_weights_only=False)
+    cnn.set_checkpoint(directory=os.path.join(config['metadata_path'], 'cgan-ckpt'))
 
-    cnn.fit(epochs=get_epochs(False), x_train=x_train, y_train=y_train, batch_size=128, shuffle=True, extract_validation_dataset=True)
+    cnn.fit(epochs=get_epochs(False), x_train=x_train, y_train=y_train, batch_size=256)
 
     time_in_seconds = round(time.time() - start_time, 2)
-    cnn.save_loss_plot(os.path.join(config['output_path'], f'CGAN_{samples}_loss.png'))
+    # cnn.save_loss_plot(os.path.join(config['output_path'], f'CGAN_{samples}_loss.png'))
 
-    cnn.load(ckpt)
+    # cnn.load(ckpt)
     predicted = cnn.test(x_test)
 
     psnr_data = round(psnr(
@@ -185,7 +185,7 @@ def train_cgan(samples: int, config: Dict[str, str]):
         normalize(predicted, data_type='int')
     ).mean(), 2)
 
-    append_in_csv(config['comparison_file'], f'{layers}, {samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
+    append_in_csv(config['comparison_file'], f'{samples}, {psnr_data}, {ssim_data}, {time_in_seconds}')
 
 
 def compare(filename: str, method: str, check: bool):
@@ -238,7 +238,7 @@ def compare(filename: str, method: str, check: bool):
             p.join()
 
     elif method.lower() == 'cgan':
-        method_func = train_autoencoder
+        method_func = train_cgan
 
         for samples in [5,10,15]:
             samples *= 1000
