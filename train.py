@@ -9,6 +9,7 @@ from multiprocessing import Process
 from typing import Tuple, Dict
 
 EPOCHS = 40
+IMAGE_DIMENSION = (50,50)
 
 def append_in_csv(filename: str, row: str):
     with open(filename, 'a') as f:
@@ -128,6 +129,14 @@ def load_data(check: bool, config: Dict[str, str])  -> Tuple[np.ndarray]:
         y_train = adiciona_a_dimensao_das_cores(y_train)
         x_test = adiciona_a_dimensao_das_cores(x_test)
         y_test = adiciona_a_dimensao_das_cores(y_test)
+    elif dataset.lower() == '25x25':
+        TRIAL_DIRECTORY = "/content/gdrive/My Drive/Colab Notebooks/dataset/Phantoms/Alvarado/"
+        path = os.path.join(TRIAL_DIRECTORY, "numpy", "25x25")
+
+        x_train = np.load(os.path.join(path, 'x_train.npy'))
+        y_train = np.load(os.path.join(path, 'y_train.npy'))
+        x_test = x_train
+        y_test = y_train
 
   
     if 'normalize' in config and config['normalize']:
@@ -188,7 +197,7 @@ def train_mlp(file: str, check: bool, config: Dict[str, str]):
 
     (x_train, y_train, _, _) = load_data(check, config)
 
-    mlp = MLP(image_dimension=(50,50), hidden_layers=3, depth=32, multiply=True)
+    mlp = MLP(image_dimension=IMAGE_DIMENSION, hidden_layers=3, depth=32, multiply=True)
     mlp.compile(optimizer="adam", learning_rate=0.001, loss="mse")
 
     ckpt = os.path.join(config['metadata_path'], f'MLP.hdf5')
@@ -210,7 +219,7 @@ def train_cnn(file: str, check: bool, config: Dict[str, str]):
 
     (x_train, y_train, _, _) = load_data(check, config)
 
-    cnn = CNN(image_dimension=(50,50), hidden_layers=10, depth=32, multiply=False, pooling=None)
+    cnn = CNN(image_dimension=IMAGE_DIMENSION, hidden_layers=10, depth=32, multiply=False, pooling=None)
     cnn.compile(optimizer="adam", learning_rate=0.001, loss='mse')
     
     ckpt = os.path.join(config['metadata_path'], f'CNN.hdf5')
@@ -248,7 +257,7 @@ def train_cgan(file: str, check: bool, config: Dict[str, str]):
 
     (x_train, y_train, _, _) = load_data(check, config)
     
-    gan = CGanDenoiser(image_dimensions=(50,50))
+    gan = CGanDenoiser(image_dimensions=IMAGE_DIMENSION)
     gan.compile(optimizer='adam', learning_rate=0.001, loss='mse')
     gan.set_checkpoint(directory=os.path.join(config['metadata_path'], 'cgan-ckpt'))
 
