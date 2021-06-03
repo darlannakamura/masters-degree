@@ -92,6 +92,7 @@ class Experiment:
         self.__dict__.update(config)
 
     def load_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        self.config['normalize'] = False
         data_loader = DataLoader(config=self.config, check=self.test)
         image_dimension = data_loader.get_patch_dimension()
 
