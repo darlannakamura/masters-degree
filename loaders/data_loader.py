@@ -204,16 +204,16 @@ class DataLoader:
         return x_train, y_train, x_test, y_test
 
     def get_patch_dimension(self) -> Tuple[int,int]:
-        dataset = self.config['dataset']
+        dim = self.config.get('dimension', None)
 
-        if isinstance(dataset, dict):
-            dim = dataset.get('dimension', DEFAULT_DIMENSION)
-            if 'x' in dim:
-                dim = dim.split('x')
-                return dim
-            else:
-                raise AssertionError("dimension should be: 50x50 format.")
-        return DEFAULT_DIMENSION
+        if not dim:
+            return DEFAULT_DIMENSION
+        
+        if 'x' in dim:
+            dim = dim.split('x')
+            return (int(dim[0]), int(dim[1]))
+        else:
+            raise AssertionError("dimension should be: 50x50 format.")
 
     def should_shuffle(self) -> bool:
         return self.config.get('shuffle', False)
