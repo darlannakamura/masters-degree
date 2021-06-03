@@ -1,0 +1,9 @@
+dataset: BSD300
+dimension: 52x52
+size:
+  train: 15000
+  test: 3800
+noise:
+  type: gaussian
+  mean: 0.0
+  variance: 0.01
