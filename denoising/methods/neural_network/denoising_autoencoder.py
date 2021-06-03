@@ -21,7 +21,6 @@ class DenoisingAutoencoder(NeuralNetwork):
         self.build()
 
     def build(self):
-      import tensorflow as tf
         from tensorflow.keras.layers import BatchNormalization
         from tensorflow.keras.layers import Conv2D
         from tensorflow.keras.layers import Conv2DTranspose
