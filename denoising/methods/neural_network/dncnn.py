@@ -1,6 +1,7 @@
 import numpy as np
-from keras import Sequential, layers, activations
-from keras.models import Model
+import tensorflow as tf
+from tensorflow.keras import Sequential, layers, activations
+from tensorflow.keras.models import Model
 
 import matplotlib.pyplot as plt
 

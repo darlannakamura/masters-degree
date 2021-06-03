@@ -19,8 +19,7 @@ class NeuralNetwork:
 
     def compile(self, optimizer: str, learning_rate: float, loss: str):
         import tensorflow as tf
-        import keras
-        from keras.models import load_model
+        from tensorflow.keras.models import load_model
 
         AVAILABLE_OPTIMIZERS = ['adam']
         AVAILABLE_LOSS = ['mse']
@@ -29,15 +28,15 @@ class NeuralNetwork:
         assert loss in AVAILABLE_LOSS, f'Available loss are: {AVAILABLE_LOSS}'
 
         if optimizer == 'adam':
-            opt = keras.optimizers.Adam(learning_rate)
+            opt = tf.keras.optimizers.Adam(learning_rate)
         
         self.model.compile(optimizer=opt, loss=loss)
 
     def set_checkpoint(self, filename, save_best_only=True, save_weights_only=False):
-        import keras
+        import tensorflow as tf
         self.has_checkpoint = True
 
-        self.checkpoint = keras.callbacks.ModelCheckpoint(
+        self.checkpoint = tf.keras.callbacks.ModelCheckpoint(
             filename, 
             save_best_only=save_best_only,
             save_weights_only=save_weights_only,

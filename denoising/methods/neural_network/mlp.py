@@ -17,13 +17,13 @@ class MLP(NeuralNetwork):
         self.build()
 
     def build(self):
-        import keras
-        from keras import Sequential, layers, activations
-        from keras.models import Model
+        import tensorflow
+        from tensorflow.keras import Sequential, layers, activations
+        from tensorflow.keras.models import Model
 
         self.input_shape = (self.image_dimension[0], self.image_dimension[1], 1)
         
-        model = keras.Sequential()
+        model = Sequential()
         input = layers.Input(shape=self.input_shape, name='input')
 
         output = layers.Dense(self.depth, activation="relu", name="dense0")(input)

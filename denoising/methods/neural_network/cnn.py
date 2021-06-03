@@ -20,13 +20,13 @@ class CNN(NeuralNetwork):
         self.build()
 
     def build(self):
-        import keras
-        from keras import Sequential, layers, activations
-        from keras.models import Model
+        import tensorflow as tf
+        from tensorflow.keras import Sequential, layers, activations
+        from tensorflow.keras.models import Model
 
         self.input_shape = (self.image_dimension[0], self.image_dimension[1], 1)
         
-        model = keras.Sequential()
+        model = Sequential()
         input = layers.Input(shape=self.input_shape, name='input')
 
         output = layers.Conv2D(self.depth, kernel_size=self.kernel_size, activation="relu", name="conv2d0")(input)
