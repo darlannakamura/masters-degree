@@ -9,6 +9,7 @@ import cv2
 import multiprocessing
 
 from typing import Tuple
+from copy import deepcopy
 
 from datetime import datetime
 from time import strftime
@@ -33,8 +34,12 @@ from report import Report
 
 from settings import BSD300_DIR, BASE_DIR, PROJECTIONS_DIR
 
-from experiments import load_config, load_methods, Method
+from experiments import load_methods, Method
 from denoising.methods.neural_network import NeuralNetwork
+
+from sklearn.model_selection import KFold
+from loaders.data_loader import DataLoader
+from loaders.config_loader import load_config
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -47,7 +52,7 @@ class Experiment:
         self.methods_name = [method.name for method in self.methods]
         
         (self.x_train, self.y_train, self.x_test, self.y_test) = self.load_data()
-
+        
         self.output_path = os.path.join(BASE_DIR, self.output, self.name)
         os.makedirs(self.output_path, exist_ok=True)
 
@@ -56,126 +61,42 @@ class Experiment:
 
     def run(self):
         self.start_date = datetime.now()
-        self.test_methods()
+        kfold = KFold(n_splits=5, shuffle=True, random_state=42)
+        x = np.concatenate((self.x_train, self.x_test), axis=0)
+        y = np.concatenate((self.y_train, self.y_test), axis=0)
 
-        self.save_results()
-        self.save_metadata()
-        self.generate_report()
+        iteration = 0
+        
+        self.real_output_path = deepcopy(self.output_path)
+
+        for _, test_index in kfold.split(x,y):
+            self.x_test, self.y_test = x[test_index], y[test_index]
+            
+            self.output_path = os.path.join(self.real_output_path, f'{iteration}')
+            os.makedirs(self.output_path, exist_ok=True)
+
+            self.metadata_path = os.path.join(self.output_path, ".metadata")
+            os.makedirs(self.metadata_path, exist_ok=True)
+
+            self.test_methods()
+
+            self.save_results()
+            self.save_metadata()
+            self.generate_report()
+
+            iteration += 1
 
     def load_configuration(self, filename: str):
         config = load_config(filename)
+        self.config = config
         self.__dict__.update(config)
 
     def load_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        if self.dataset.lower() == 'bsd300':
-            imgs = load_bsd300(BSD300_DIR)
-            patches = extract_patches(imgs, begin=(0,0), stride=10,
-                dimension=(50,50), quantity_per_image=(10,10))
+        data_loader = DataLoader(config=self.config, check=self.test)
+        image_dimension = data_loader.get_patch_dimension()
 
-            if hasattr(self, 'shuffle') and self.shuffle:
-                np.random.seed(10)
-                np.random.shuffle(patches)
-
-            y_train, y_test = load_dataset(patches, shuffle=False, split=(80,20))
-
-            if isinstance(self.noise, str):
-                if self.noise == 'poisson':
-                    self.std = 0.1
-                    x_train = add_noise(y_train, noise='poisson')
-                    x_test = add_noise(y_test, noise='poisson')
-            if isinstance(self.noise, dict):
-                assert 'type' in self.noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
-                noise_type = self.noise['type']
-
-                assert 'mean' in self.noise, "noise should have 'mean' attribute."
-                assert 'variance' in self.noise, "noise should have 'variance' attribute."
-
-                self.mean = float(self.noise['mean'])
-                self.variance = float(self.noise['variance'])
-                self.std = math.sqrt(self.variance) # 0.1
-
-                if noise_type == 'gaussian':
-                    x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
-                    x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
-                elif noise_type == 'poisson-gaussian':
-                    x_train = add_noise(y_train, noise='poisson')
-                    x_test = add_noise(y_test, noise='poisson')
-
-                    x_train = add_noise(y_train, noise='gaussian', mean=self.mean, var=self.variance)
-                    x_test = add_noise(y_test, noise='gaussian', mean=self.mean, var=self.variance)
-
-        elif self.dataset.lower() == 'dbt':
-            noisy_projections = np.load(os.path.join(PROJECTIONS_DIR, 'noisy_10.npy'))
-            noisy_projections = noisy_projections.reshape((-1, 1792, 2048, 1))
-            
-            noisy_patches = extract_patches(noisy_projections, begin=(0,500), stride=10,
-                dimension=(52,52), quantity_per_image=(10,10))
-
-            x_train, x_test = load_dataset(noisy_patches, shuffle=False, split=(80,20))
-
-            original_projections = np.load(os.path.join(PROJECTIONS_DIR, 'original_10.npy'))
-            original_projections = original_projections.reshape((-1, 1792, 2048, 1))
-            
-            original_patches = extract_patches(original_projections, begin=(0,500), stride=10,
-                dimension=(52,52), quantity_per_image=(10,10))
-
-            y_train, y_test = load_dataset(original_patches, shuffle=False, split=(80,20))
-
-        elif self.dataset.lower() == 'spie_2021':
-            from denoising.datasets.spie_2021 import carrega_dataset, adiciona_a_dimensao_das_cores
-
-            full_x_train, full_y_train, full_x_test, full_y_test = carrega_dataset(
-              '/content/gdrive/My Drive/Colab Notebooks/dataset/patch-50x50-cada-projecao-200', 
-              divisao=(80,20), embaralhar=True)
-
-            x_train =  np.reshape(full_x_train, (-1, 50, 50))
-            x_test = np.reshape(full_x_test, (-1, 50, 50))
-            y_train = np.reshape(full_y_train, (-1, 50, 50))
-            y_test = np.reshape(full_y_test, (-1, 50, 50)) 
-
-            del full_x_train
-            del full_y_train
-            del full_x_test
-            del full_y_test
-
-
-            x_train = x_train[:15000]
-            y_train = y_train[:15000]
-
-            x_test = x_test[:3750]
-            y_test = y_test[:3750]
-
-
-            np.random.seed(13)
-            np.random.shuffle(x_train)
-
-            np.random.seed(13)
-            np.random.shuffle(y_train)
-
-
-            np.random.seed(43)
-            np.random.shuffle(x_test)
-
-
-            np.random.seed(43)
-            np.random.shuffle(y_test)
-
-            x_train = cv2.normalize(x_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
-            y_train = cv2.normalize(y_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
-            x_test = cv2.normalize(x_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
-            y_test = cv2.normalize(y_test, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
-
-            x_train = adiciona_a_dimensao_das_cores(x_train)
-            y_train = adiciona_a_dimensao_das_cores(y_train)
-            x_test = adiciona_a_dimensao_das_cores(x_test)
-            y_test = adiciona_a_dimensao_das_cores(y_test)
-
-        arrs = (x_train, y_train, x_test, y_test)
-
-        if self.test:
-            arrs = (x_train[:10], y_train[:10], x_test[:10], y_test[:10])
-            
-        return arrs
+        self.image_dimension = image_dimension
+        return data_loader.get()
 
     def get_normalized_dataset(self) -> Tuple[np.ndarray]:
         return (
@@ -216,11 +137,16 @@ class Experiment:
 
                 instance = instance(**method.parameters.get('__init__', {}))
 
+                if hasattr(instance, 'image_dimension'):
+                    instance.image_dimension = self.image_dimension
+
                 if isinstance(instance, NeuralNetwork):
                     instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
                 else:
                     instance.compile(**method.parameters.get('compile', {}))
-                    instance.set_checkpoint(**method.parameters.get('set_checkpoint', {}))
+                    # instance.set_checkpoint(**method.parameters.get('set_checkpoint', {}))
+                    instance.set_checkpoint(diretory=os.path.join(self.metadata_path, 'cga-ckpt-8'))
+
                     instance.load(**method.parameters.get('load', {}))
 
                 predicted = instance.test(x_test)

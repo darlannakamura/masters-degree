@@ -24,12 +24,6 @@ class Method:
     def __str__(self):
         return self.name
 
-def load_config(filename: str) -> dict:
-    with open(filename, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
-        return config
-
 def load_methods() -> List[Method]:
     """Read all methods from methods.py with the @method decorator.
     Convert the dict response in a Method object 

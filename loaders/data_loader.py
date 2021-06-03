@@ -1,5 +1,4 @@
 import os, cv2
-from train import train
 from settings import BSD300_DIR, PROJECTIONS_DIR
 import numpy as np
 from typing import Dict, Tuple
