@@ -1,4 +1,4 @@
-import os, cv2
+import os, cv2, math
 from settings import BSD300_DIR, PROJECTIONS_DIR
 import numpy as np
 from typing import Dict, Tuple
@@ -16,6 +16,7 @@ class DataLoader:
         self.is_testing = check
 
         self.x_train, self.y_train, self.x_test, self.y_test = self.get_dataset(config['dataset'])
+        self.set_noise_statistics()
 
     def get_train(self):
         return (self.x_train, self.y_train)
@@ -70,6 +71,39 @@ class DataLoader:
                 x_test[:test_size], y_test[:test_size])
 
         return (x_train, y_train, x_test, y_test)
+
+
+    def set_noise_statistics(self):
+        noise = self.config.get('noise', None)
+
+        if not noise:
+            noise = self.y_test - self.x_test
+            self.mean = noise.mean()
+            self.variance = np.var(noise)
+            self.std = noise.std()
+
+        if isinstance(noise, str) and noise == 'poisson':
+            return 0.1
+        
+        if isinstance(noise, dict):
+            assert 'type' in noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
+            noise_type = noise['type']
+
+            assert 'mean' in noise, "noise should have 'mean' attribute."
+            assert 'variance' in noise, "noise should have 'variance' attribute."
+            
+            self.mean = float(noise['mean'])
+            self.variance = float(noise['variance'])
+            self.std = math.sqrt(self.variance)
+        
+    def get_noise_mean(self) -> float:
+        return self.mean
+
+    def get_noise_variance(self) -> float:
+        return self.variance
+    
+    def get_noise_std(self) -> float:
+        return self.std
 
 
     def load_bsd300(self) -> Tuple[np.ndarray, np.ndarray]:

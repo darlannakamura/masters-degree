@@ -14,6 +14,7 @@ from denoising.methods.neural_network.cnn import CNN
 from denoising.methods.neural_network.cgan_denoiser.main import CGanDenoiser 
 
 EPOCHS = 40
+RUN_IN_CPU = False
 
 class Methods:
     @method
@@ -66,7 +67,7 @@ class Methods:
         parameters = {
             "__init__": {
                 'number_of_layers': 19,
-                "run_in_cpu": True
+                "run_in_cpu": RUN_IN_CPU
             },
             "compile": {
                 "optimizer": "adam",
@@ -101,7 +102,7 @@ class Methods:
         parameters = {
             "__init__": {
                 'number_of_layers': 10,
-                "run_in_cpu": True
+                "run_in_cpu": RUN_IN_CPU
             },
             "compile": {
                 "optimizer": "adam",
@@ -128,7 +129,7 @@ class Methods:
             'parameters': parameters
         }
     
-    # @method
+    @method
     def denoising_autoencoder():
         return {
             'name': 'Autoencoder',
@@ -137,7 +138,7 @@ class Methods:
             "parameters": {
                 "__init__": {
                     "image_dimension": (52,52),
-                    "run_in_cpu": True
+                    "run_in_cpu": RUN_IN_CPU
                 },
                 "compile": {
                     "optimizer": "adam",
@@ -170,7 +171,7 @@ class Methods:
                     "hidden_layers": 3,
                     "depth": 32,
                     "multiply": True,
-                    "run_in_cpu": True
+                    "run_in_cpu": RUN_IN_CPU
                 },
                 "compile": {
                     "optimizer": "adam",
@@ -204,7 +205,7 @@ class Methods:
                     "depth": 32,
                     "multiply": False,
                     "pooling": None,
-                    "run_in_cpu": True
+                    "run_in_cpu": RUN_IN_CPU
                 },
                 "compile": {
                     "optimizer": "adam",
@@ -234,7 +235,7 @@ class Methods:
             "parameters": {
                 "__init__": {
                     "image_dimensions": (50,50),
-                    "run_in_cpu": True,
+                    "run_in_cpu": RUN_IN_CPU,
                 },
                 "compile": {
                     "optimizer": "adam",

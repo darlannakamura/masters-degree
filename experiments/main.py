@@ -95,6 +95,8 @@ class Experiment:
         data_loader = DataLoader(config=self.config, check=self.test)
         image_dimension = data_loader.get_patch_dimension()
 
+        self.std = data_loader.get_noise_std()
+
         self.image_dimension = image_dimension
         return data_loader.get()
 
@@ -139,15 +141,18 @@ class Experiment:
 
                 if hasattr(instance, 'image_dimension'):
                     instance.image_dimension = self.image_dimension
+                if hasattr(instance, 'image_dimensions'):
+                    instance.image_dimensions = self.image_dimensions
 
                 if isinstance(instance, NeuralNetwork):
                     instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
                 else:
                     instance.compile(**method.parameters.get('compile', {}))
                     # instance.set_checkpoint(**method.parameters.get('set_checkpoint', {}))
-                    instance.set_checkpoint(diretory=os.path.join(self.metadata_path, 'cga-ckpt-8'))
+                    instance.set_checkpoint(directory=os.path.join(self.metadata_path, 'cga-ckpt-8'))
 
-                    instance.load(**method.parameters.get('load', {}))
+                    # instance.load(**method.parameters.get('load', {}))
+                    instance.load(filename=os.path.join(self.metadata_path, 'cga-ckpt-8'))
 
                 predicted = instance.test(x_test)
 
