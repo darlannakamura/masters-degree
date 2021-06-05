@@ -14,7 +14,7 @@ from denoising.methods.neural_network.cnn import CNN
 from denoising.methods.neural_network.cgan_denoiser.main import CGanDenoiser 
 
 EPOCHS = 40
-RUN_IN_CPU = False
+RUN_IN_CPU = True
 
 class Methods:
     @method
@@ -168,7 +168,7 @@ class Methods:
             "parameters": {
                 "__init__": {
                     "image_dimension": (50,50),
-                    "hidden_layers": 3,
+                    "hidden_layers": 5,
                     "depth": 32,
                     "multiply": True,
                     "run_in_cpu": RUN_IN_CPU
@@ -201,7 +201,7 @@ class Methods:
             "parameters": {
                 "__init__": {
                     "image_dimension": (50,50),
-                    "hidden_layers": 10,
+                    "hidden_layers": 5,
                     "depth": 32,
                     "multiply": False,
                     "pooling": None,

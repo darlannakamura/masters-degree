@@ -26,6 +26,9 @@ class CNN(NeuralNetwork):
 
         self.input_shape = (self.image_dimension[0], self.image_dimension[1], 1)
         
+        gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.9)
+        tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options,allow_soft_placement=True))
+
         model = Sequential()
         input = layers.Input(shape=self.input_shape, name='input')
 

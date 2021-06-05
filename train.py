@@ -27,7 +27,7 @@ def train_mlp(check: bool, config: Dict[str, str], x_train, y_train, image_dimen
     start_time = time.time()
     from denoising.methods.neural_network.mlp import MLP
 
-    mlp = MLP(image_dimension=image_dimension, hidden_layers=3, depth=32, multiply=True)
+    mlp = MLP(image_dimension=image_dimension, hidden_layers=5, depth=32, multiply=True)
     mlp.compile(optimizer="adam", learning_rate=0.001, loss="mse")
 
     config['output_path'] = os.path.join(config['output_path'], f'{iteration}')
@@ -51,7 +51,7 @@ def train_cnn(check: bool, config: Dict[str, str], x_train, y_train, image_dimen
     start_time = time.time()
     from denoising.methods.neural_network.cnn import CNN
 
-    cnn = CNN(image_dimension=image_dimension, hidden_layers=10, depth=32, multiply=False, pooling=None)
+    cnn = CNN(image_dimension=image_dimension, hidden_layers=5, depth=32, multiply=False, pooling=None)
     cnn.compile(optimizer="adam", learning_rate=0.001, loss='mse')
 
     config['output_path'] = os.path.join(config['output_path'], f'{iteration}')

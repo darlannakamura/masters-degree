@@ -137,23 +137,27 @@ class Experiment:
                 predicted = instance(x_test, **kwargs)
             else:
                 (_, _, x_test, y_test) = self.get_normalized_dataset()
+                init_params = method.parameters.get('__init__', {})
 
-                instance = instance(**method.parameters.get('__init__', {}))
+                print('METHOD: ', method.name)
 
-                if hasattr(instance, 'image_dimension'):
-                    instance.image_dimension = self.image_dimension
-                if hasattr(instance, 'image_dimensions'):
-                    instance.image_dimensions = self.image_dimensions
+                if 'image_dimension' in init_params:
+                  init_params['image_dimension'] = self.image_dimension
+                
+                if 'image_dimensions' in init_params:
+                  init_params['image_dimensions'] = self.image_dimension
+
+                instance = instance(**init_params)
 
                 if isinstance(instance, NeuralNetwork):
-                    instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))
+                    instance.load(os.path.join(self.metadata_path, f'{method.name}.hdf5'))                
                 else:
                     instance.compile(**method.parameters.get('compile', {}))
                     # instance.set_checkpoint(**method.parameters.get('set_checkpoint', {}))
                     instance.set_checkpoint(directory=os.path.join(self.metadata_path, 'cga-ckpt-8'))
 
                     # instance.load(**method.parameters.get('load', {}))
-                    instance.load(filename=os.path.join(self.metadata_path, 'cga-ckpt-8'))
+                    instance.load(filename=os.path.join(self.metadata_path, 'cgan-ckpt-8'))
 
                 predicted = instance.test(x_test)
 
