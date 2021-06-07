@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from multiprocessing import Pool
 
-def parallel(noisy_images: np.ndarray, function: Callable, num_threads:int=None, **kwargs) -> np.ndarray:
+def parallel(noisy_images: np.ndarray, function: Callable, noise_std_dev: float, num_threads:int=None, **kwargs) -> np.ndarray:
     if num_threads is None:
         num_threads = os.cpu_count()
 
@@ -20,6 +20,7 @@ def parallel(noisy_images: np.ndarray, function: Callable, num_threads:int=None,
     for i in range(0, total, quantity_per_thread):
         params.append({
             'noisy_images': noisy_images[:, i:i+quantity_per_thread , :, :],
+            'noise_std_dev': noise_std_dev,
             **kwargs
         })
 
