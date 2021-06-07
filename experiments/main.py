@@ -133,8 +133,16 @@ class Experiment:
                 if self.test and method.name == 'DIP':
                     kwargs['iterations'] = 1
                 
-                
-                predicted = instance(x_test, **kwargs)
+                if method.parallel:
+                    from denoising.methods.traditional import parallel
+                    predicted = parallel(
+                        noisy_images=x_test, 
+                        num_threads=method.num_threads or os.cpu_count(),
+                        function=instance,
+                        **kwargs
+                    )
+                else:
+                    predicted = instance(x_test, **kwargs)
             else:
                 (_, _, x_test, y_test) = self.get_normalized_dataset()
                 init_params = method.parameters.get('__init__', {})

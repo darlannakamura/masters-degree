@@ -42,21 +42,27 @@ class Methods:
     def bm3d():
         return {
             'instance': BM3D,
-            'name': 'BM3D'
+            'name': 'BM3D',
+            'parallel': True,
+            'num_threads': 12
         }
 
     @method
     def ksvd():
         return {
             'instance': KSVD,
-            'name': 'K-SVD'
+            'name': 'K-SVD',
+            'parallel': True,
+            'num_threads': 12
         }
 
     @method
     def dip():
         return {
             'instance': deep_image_prior,
-            'name': 'DIP'
+            'name': 'DIP',
+            'parallel': True,
+            'num_threads': 4
         }
 
     @method
