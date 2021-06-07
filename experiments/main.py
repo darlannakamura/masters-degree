@@ -70,21 +70,26 @@ class Experiment:
         self.real_output_path = deepcopy(self.output_path)
 
         for _, test_index in kfold.split(x,y):
-            self.x_test, self.y_test = x[test_index], y[test_index]
-            
-            self.output_path = os.path.join(self.real_output_path, f'{iteration}')
-            os.makedirs(self.output_path, exist_ok=True)
+            try:
+                self.x_test, self.y_test = x[test_index], y[test_index]
+                
+                self.output_path = os.path.join(self.real_output_path, f'{iteration}')
+                os.makedirs(self.output_path, exist_ok=True)
 
-            self.metadata_path = os.path.join(self.output_path, ".metadata")
-            os.makedirs(self.metadata_path, exist_ok=True)
+                self.metadata_path = os.path.join(self.output_path, ".metadata")
+                os.makedirs(self.metadata_path, exist_ok=True)
+                self.test_methods()
+                iteration += 1
+            except Exception as err:
+                print('An error has ocurred.')
+                print(err)
+                import traceback
+                traceback.print_exc()
+            finally:
+                self.save_results()
+                self.save_metadata()
+                self.generate_report()
 
-            self.test_methods()
-
-            self.save_results()
-            self.save_metadata()
-            self.generate_report()
-
-            iteration += 1
 
     def load_configuration(self, filename: str):
         config = load_config(filename)
