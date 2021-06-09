@@ -1,0 +1,14 @@
+name: New Poisson-Gaussian
+output: results
+dataset: BSD300
+dimension: 52x52
+size:
+  train: 20000
+  test: 5000
+about: Testando processar os dados para redes neurais com normalização entre 0 e 1 e para os tradicionais apenas dividir por 255.
+noise: 
+  type: poisson-gaussian
+  mean: 0.0
+  variance: 0.01
+normalize: True
+shuffle: True

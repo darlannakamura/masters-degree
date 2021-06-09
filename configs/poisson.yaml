@@ -1,0 +1,11 @@
+name: New Poisson
+output: results
+dataset: BSD300
+dimension: 52x52
+size:
+  train: 20000
+  test: 5000
+about: Testando processar os dados para redes neurais com normalização entre 0 e 1 e para os tradicionais apenas dividir por 255.
+noise: poisson
+normalize: True
+shuffle: True
