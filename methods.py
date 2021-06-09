@@ -14,7 +14,7 @@ from denoising.methods.neural_network.cnn import CNN
 from denoising.methods.neural_network.cgan_denoiser.main import CGanDenoiser 
 
 EPOCHS = 40
-RUN_IN_CPU = True
+RUN_IN_CPU = False
 
 class Methods:
     @method
@@ -44,7 +44,7 @@ class Methods:
             'instance': BM3D,
             'name': 'BM3D',
             'parallel': True,
-            'num_threads': 12
+            'num_threads': 8
         }
 
     @method
@@ -53,7 +53,7 @@ class Methods:
             'instance': KSVD,
             'name': 'K-SVD',
             'parallel': True,
-            'num_threads': 12
+            'num_threads': 8
         }
 
     @method
@@ -62,7 +62,7 @@ class Methods:
             'instance': deep_image_prior,
             'name': 'DIP',
             'parallel': True,
-            'num_threads': 4
+            'num_threads': 8
         }
 
     @method

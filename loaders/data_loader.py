@@ -76,15 +76,12 @@ class DataLoader:
     def set_noise_statistics(self):
         noise = self.config.get('noise', None)
 
-        if not noise:
+        if not noise or (isinstance(noise, str) and noise == 'poisson'):
             noise = self.y_test - self.x_test
-            self.mean = noise.mean()
-            self.variance = np.var(noise)
-            self.std = noise.std()
+            self.mean = float(noise.mean())
+            self.variance = float(np.var(noise))
+            self.std = float(noise.std())
 
-        if isinstance(noise, str) and noise == 'poisson':
-            return 0.1
-        
         if isinstance(noise, dict):
             assert 'type' in noise, "noise should have 'type' attribute. Options are: gaussian and poisson-gaussian."
             noise_type = noise['type']

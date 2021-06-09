@@ -7,7 +7,12 @@ from tqdm import tqdm
 
 from multiprocessing import Pool
 
-def parallel(noisy_images: np.ndarray, function: Callable, noise_std_dev: float, num_threads:int=None, **kwargs) -> np.ndarray:
+def batch_function(params):
+    function = params['function']
+    del params['function']
+    return function(**params)
+
+def parallel(noisy_images: np.ndarray, function: Callable, num_threads:int=None, **kwargs) -> np.ndarray:
     if num_threads is None:
         num_threads = os.cpu_count()
 
@@ -19,15 +24,15 @@ def parallel(noisy_images: np.ndarray, function: Callable, noise_std_dev: float,
 
     for i in range(0, total, quantity_per_thread):
         params.append({
-            'noisy_images': noisy_images[:, i:i+quantity_per_thread , :, :],
-            'noise_std_dev': noise_std_dev,
-            **kwargs
+            'noisy_images': noisy_images[i:i+quantity_per_thread, :, :, :],
+            'function': function,
+            **kwargs,
         })
 
     outputs = None
     with Pool(num_threads) as pool:
         # output has the output of each thread
-        outputs = pool.map(function, params)
+        outputs = pool.map(batch_function, params)
     
     array = outputs[0]
     

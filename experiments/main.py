@@ -71,6 +71,7 @@ class Experiment:
 
         for _, test_index in kfold.split(x,y):
             try:
+                print('iteration KFOLD: ', iteration)
                 self.x_test, self.y_test = x[test_index], y[test_index]
                 
                 self.output_path = os.path.join(self.real_output_path, f'{iteration}')
@@ -79,7 +80,6 @@ class Experiment:
                 self.metadata_path = os.path.join(self.output_path, ".metadata")
                 os.makedirs(self.metadata_path, exist_ok=True)
                 self.test_methods()
-                iteration += 1
             except Exception as err:
                 print('An error has ocurred.')
                 print(err)
@@ -89,6 +89,7 @@ class Experiment:
                 self.save_results()
                 self.save_metadata()
                 self.generate_report()
+            iteration += 1
 
 
     def load_configuration(self, filename: str):
@@ -138,7 +139,7 @@ class Experiment:
                 if self.test and method.name == 'DIP':
                     kwargs['iterations'] = 1
                 
-                if method.parallel:
+                if hasattr(method, 'parallel') and method.parallel:
                     from denoising.methods.traditional import parallel
                     predicted = parallel(
                         noisy_images=x_test, 
