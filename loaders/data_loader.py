@@ -1,5 +1,5 @@
 import os, cv2, math
-from settings import BSD300_DIR, PROJECTIONS_DIR
+from settings import DATABASES_DIR, BSD300_DIR, PROJECTIONS_DIR
 import numpy as np
 from typing import Dict, Tuple
 
@@ -40,6 +40,8 @@ class DataLoader:
             x_train, y_train, x_test, y_test = self.load_spie_2021()
         elif dataset_name.lower() == '25x25':
             x_train, y_train, x_test, y_test = self.load_25x25()
+        else:
+          x_train, y_train, x_test, y_test = self.load_from_numpy(dataset_name)
 
         if self.should_normalize():
             x_train = cv2.normalize(x_train, None, alpha= 0, beta = 1, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_32F)
@@ -145,6 +147,26 @@ class DataLoader:
         y_train, y_test = load_dataset(original_patches, shuffle=False, split=(80,20))
 
         return x_train, y_train, x_test, y_test
+
+    def load_from_numpy(self, dataset_name: str):
+      data_path = os.path.join(DATABASES_DIR, dataset_name)
+      noisy_patches = np.load(os.path.join(data_path, 'noisy_patches.npy'))
+      gt_patches = np.load(os.path.join(data_path, 'ground_truth_patches.npy'))
+
+      noisy_patches = np.reshape(noisy_patches, (-1, noisy_patches.shape[1], noisy_patches.shape[2], 1))
+      gt_patches = np.reshape(gt_patches, (-1, gt_patches.shape[1], gt_patches.shape[2], 1))
+
+      if self.should_shuffle():
+          np.random.seed(10)
+          np.random.shuffle(noisy_patches)
+
+          np.random.seed(10)
+          np.random.shuffle(gt_patches)
+
+      x_train, x_test = load_dataset(noisy_patches, shuffle=False, split=(80,20))
+      y_train, y_test = load_dataset(gt_patches, shuffle=False, split=(80,20))
+
+      return x_train, y_train, x_test, y_test
 
     def add_noise(self, y_train, y_test) -> Tuple[np.ndarray, np.ndarray]:
         noise = self.config.get('noise', None)
