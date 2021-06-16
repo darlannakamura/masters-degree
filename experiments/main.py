@@ -44,9 +44,10 @@ from loaders.config_loader import load_config
 logging.basicConfig(level=logging.WARNING)
 
 class Experiment:
-    def __init__(self, filename:str, test: bool):
+    def __init__(self, filename:str, test: bool, k: int):
         self.test = test
         self.load_configuration(filename)
+        self.k = k
 
         self.methods = load_methods()
         self.methods_name = [method.name for method in self.methods]
@@ -70,25 +71,26 @@ class Experiment:
         self.real_output_path = deepcopy(self.output_path)
 
         for _, test_index in kfold.split(x,y):
-            try:
-                print('iteration KFOLD: ', iteration)
-                self.x_test, self.y_test = x[test_index], y[test_index]
-                
-                self.output_path = os.path.join(self.real_output_path, f'{iteration}')
-                os.makedirs(self.output_path, exist_ok=True)
+            if not hasattr(self, 'k') or (hasattr(self, 'k') and iteration == self.k):
+                try:
+                    print('iteration KFOLD: ', iteration)
+                    self.x_test, self.y_test = x[test_index], y[test_index]
+                    
+                    self.output_path = os.path.join(self.real_output_path, f'{iteration}')
+                    os.makedirs(self.output_path, exist_ok=True)
 
-                self.metadata_path = os.path.join(self.output_path, ".metadata")
-                os.makedirs(self.metadata_path, exist_ok=True)
-                self.test_methods()
-            except Exception as err:
-                print('An error has ocurred.')
-                print(err)
-                import traceback
-                traceback.print_exc()
-            finally:
-                self.save_results()
-                self.save_metadata()
-                self.generate_report()
+                    self.metadata_path = os.path.join(self.output_path, ".metadata")
+                    os.makedirs(self.metadata_path, exist_ok=True)
+                    self.test_methods()
+                except Exception as err:
+                    print('An error has ocurred.')
+                    print(err)
+                    import traceback
+                    traceback.print_exc()
+                finally:
+                    self.save_results()
+                    self.save_metadata()
+                    self.generate_report()
             iteration += 1
 
 
@@ -129,9 +131,10 @@ class Experiment:
         for method in tqdm(self.methods):
             start_time = time.time()
             instance = method.instance
+
+            (_, _, x_test, y_test) = self.get_normalized_dataset()
             
             if method.is_traditional:
-                (_, _, x_test, y_test) = self.get_divided_by_255_dataset()
                 if self.dataset.lower() in ('dbt', 'spie_2021'):
                     noise = self.y_test - self.x_test
                     self.std = float(noise.std())
@@ -150,7 +153,6 @@ class Experiment:
                 else:
                     predicted = instance(x_test, **kwargs)
             else:
-                (_, _, x_test, y_test) = self.get_normalized_dataset()
                 init_params = method.parameters.get('__init__', {})
 
                 print('METHOD: ', method.name)
