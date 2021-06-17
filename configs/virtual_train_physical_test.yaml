@@ -1,0 +1,12 @@
+name: Virtual train physical test
+output: results
+dataset:
+  train: virtual-mixed
+  test: physical-mixed
+dimension: 52x52
+size:
+  train: 19200
+  test: 4800
+about: usando o dataset virtual misturado para treino e o dataset fisico misturado para teste.
+normalize: True
+shuffle: True

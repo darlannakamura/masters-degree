@@ -15,7 +15,14 @@ class DataLoader:
         self.config = config
         self.is_testing = check
 
-        self.x_train, self.y_train, self.x_test, self.y_test = self.get_dataset(config['dataset'])
+        if isinstance(config['dataset'], str):
+            self.x_train, self.y_train, self.x_test, self.y_test = self.get_dataset(config['dataset'])
+        elif isinstance(config['dataset'], dict):
+            train_dataset = config['dataset']['train']
+            test_dataset = config['dataset']['test']
+            self.x_train, self.y_train, _, _ = self.get_dataset(train_dataset)
+            _, _, self.x_test, self.y_test = self.get_dataset(test_dataset)
+        
         self.set_noise_statistics()
 
     def get_train(self):
