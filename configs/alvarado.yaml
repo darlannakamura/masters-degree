@@ -1,0 +1,12 @@
+name: Alvarado
+output: results
+dataset:
+  train: alvarado
+  test: alvarado
+dimension: 52x52
+size:
+  train: 40000
+  test: 10000
+about: teste e treino no Alvarado
+normalize: True
+shuffle: True

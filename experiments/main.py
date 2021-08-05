@@ -135,7 +135,7 @@ class Experiment:
             (_, _, x_test, y_test) = self.get_normalized_dataset()
             
             if method.is_traditional:
-                if self.dataset.lower() in ('dbt', 'spie_2021'):
+                if isinstance(self.dataset, str) and self.dataset.lower() in ('dbt', 'spie_2021'):
                     noise = self.y_test - self.x_test
                     self.std = float(noise.std())
                 kwargs = {'noise_std_dev': self.std}
@@ -211,6 +211,20 @@ class Experiment:
         #     pickle.dump(self.methods, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         self.df.to_pickle(os.path.join(self.metadata_path, "df.pickle"))
+
+        self.save_dict(self.methods, os.path.join(self.metadata_path, 'methods.pickle'))
+
+    def save_dict(self, di_, filename_):
+        from six.moves import cPickle as pickle #for performance
+
+        with open(filename_, 'wb') as f:
+              pickle.dump(di_, f)
+
+    # def load_dict(filename_):
+    #     with open(filename_, 'rb') as f:
+    #         ret_di = pickle.load(f)
+    #     return ret_di
+    
 
     def get_methods_name(self):
         names = self.methods_name

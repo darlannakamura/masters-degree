@@ -25,7 +25,8 @@ class NeuralNetwork:
         AVAILABLE_LOSS = ['mse']
 
         assert optimizer in AVAILABLE_OPTIMIZERS, f'Available optimizers are: {AVAILABLE_OPTIMIZERS}'
-        assert loss in AVAILABLE_LOSS, f'Available loss are: {AVAILABLE_LOSS}'
+        if isinstance(loss, str):
+            assert loss in AVAILABLE_LOSS, f'Available loss are: {AVAILABLE_LOSS}'
 
         if optimizer == 'adam':
             opt = tf.keras.optimizers.Adam(learning_rate)
